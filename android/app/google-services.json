@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1051656917820",
+    "project_id": "replanto",
+    "storage_bucket": "replanto.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051656917820:android:c30932220df6171e728439",
+        "android_client_info": {
+          "package_name": "com.example.replanto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVmWtaiF55ydFHc_Xn31Ju8oTm7EqHsGA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
