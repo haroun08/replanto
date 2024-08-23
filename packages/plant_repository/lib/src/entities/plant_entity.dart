@@ -1,6 +1,3 @@
-import '../models/macros.dart';
-import 'macros_entity.dart';
-
 class PlantEntity {
   String plantId;
   String picture;

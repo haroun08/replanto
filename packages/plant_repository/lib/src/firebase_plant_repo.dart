@@ -4,12 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../plant_repository.dart';
 
-class FirebasePizzaRepo implements PizzaRepo {
-  final pizzaCollection = FirebaseFirestore.instance.collection('pizzas');
+class FirebasePlantRepo implements PlantRepo {
+  final plantCollection = FirebaseFirestore.instance.collection('plants');
 
   Future<List<Plant>> getPizzas() async {
     try {
-      final querySnapshot = await pizzaCollection.get();
+      final querySnapshot = await plantCollection.get();
 
       return querySnapshot.docs.map((doc) {
         return Plant.fromEntity(PlantEntity.fromDocument(doc.data()));
@@ -20,4 +20,9 @@ class FirebasePizzaRepo implements PizzaRepo {
       rethrow;
     }
   }
+
+
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

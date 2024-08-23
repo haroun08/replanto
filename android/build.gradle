@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+
 allprojects {
     repositories {
         google()
@@ -7,10 +18,8 @@ allprojects {
 
 rootProject.buildDir = "../build"
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(":app")
+    buildDir = "${rootProject.buildDir}/${project.name}"
+    evaluationDependsOn(':app')
 }
 
 tasks.register("clean", Delete) {

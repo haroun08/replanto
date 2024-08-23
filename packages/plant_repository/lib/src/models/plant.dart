@@ -1,5 +1,4 @@
 import '../entities/plant_entity.dart';
-import 'macros.dart';
 
 class Plant {
   String plantId;
