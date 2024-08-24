@@ -39,31 +39,52 @@ class CarouselPanel extends StatelessWidget {
                 ),
               );
             },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                pictureUrl != null
-                    ? Image.network(
-                  pictureUrl,
-                  width: 250,
-                  height: 200,
-                  fit: BoxFit.cover,
-                )
-                    : const Icon(Icons.local_florist, size: 150),
-                const SizedBox(height: 20),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: Offset(0, 4), // changes position of shadow
                   ),
-                ),
-              ],
+                ],
+                color: Colors.white,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+                    child: pictureUrl != null
+                        ? Image.network(
+                      pictureUrl,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    )
+                        : const Icon(Icons.local_florist, size: 150, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }).toList(),
-
       ),
     );
   }
