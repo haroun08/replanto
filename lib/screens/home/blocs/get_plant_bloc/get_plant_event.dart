@@ -6,3 +6,6 @@ sealed class GetPlantEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+final class GetPlant extends GetPlantEvent {}
+
+

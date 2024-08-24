@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:replanto/pages/Authentification/views/sign_in_screen.dart';
-import 'package:replanto/pages/Authentification/views/sign_up_screen.dart';
+import 'package:replanto/screens/auth/views/sign_in_screen.dart';
+import 'package:replanto/screens/auth/views/sign_up_screen.dart';
 
 import '../../../blocs/authentication_bloc/authentication_bloc_bloc.dart';
 import '../blocs/bloc/sign_in_bloc.dart';

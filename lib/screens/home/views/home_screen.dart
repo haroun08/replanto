@@ -1,10 +1,9 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:replanto/pages/Authentification/views/sign_up_screen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
-import '../Authentification/views/welcome_screen.dart';
+import '../../auth/views/sign_up_screen.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});

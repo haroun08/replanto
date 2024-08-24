@@ -1,6 +1,10 @@
+import 'package:bloc/bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:replanto/pages/Home/HomePage.dart';
+import 'package:replanto/simple_bloc_observer.dart';
+import 'package:user_repository/user_repository.dart';
+
+import 'app.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,24 +16,9 @@ void main() async{
       messagingSenderId: '1051656917820',
       storageBucket: 'replanto.appspot.com',
     ),
-  );  runApp(const MyApp());
+  );
+  Bloc.observer = SimpleBlocObserver();
+  runApp(MyApp(FirebaseUserRepo()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const Homepage(),
-    );
-  }
-}
 

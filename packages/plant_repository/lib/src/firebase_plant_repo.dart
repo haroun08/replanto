@@ -7,7 +7,8 @@ import '../plant_repository.dart';
 class FirebasePlantRepo implements PlantRepo {
   final plantCollection = FirebaseFirestore.instance.collection('plants');
 
-  Future<List<Plant>> getPizzas() async {
+  @override
+  Future<List<Plant>> getPlants() async {
     try {
       final querySnapshot = await plantCollection.get();
 
