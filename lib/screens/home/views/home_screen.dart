@@ -2,8 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:plant_repository/plant_repository.dart';
+import 'package:replanto/app.dart';
+import 'package:replanto/screens/auth/blocs/bloc/sign_in_bloc.dart';
 
 import '../../auth/views/sign_up_screen.dart';
+import 'details_screen.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -58,7 +63,7 @@ class Homepage extends StatelessWidget {
             label: 'Research',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.person_alt_circle),
+            icon: Icon(CupertinoIcons.arrow_right_to_line),
             label: 'Logout',
           ),
         ],
@@ -80,10 +85,7 @@ class Homepage extends StatelessWidget {
             // Navigate to Research Page
               break;
             case 4:
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context)=> const SignUpScreen())
-              );
+              context.read<SignInBloc>().add(SignOutRequired());
 
               break;
           }
@@ -110,31 +112,56 @@ class Homepage extends StatelessWidget {
             child: CarouselSlider.builder(
               itemCount: plants.length,
               itemBuilder: (context, index, realIndex) {
-                final plant = plants[index];
-                final name = plant['name'];
-                final pictureUrl = plant['picture'];
+                final plantData = plants[index];
+                final name = plantData['name'] ?? 'Unknown Plant';
+                final pictureUrl = plantData['picture'];
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    pictureUrl != null
-                        ? Image.network(
-                      pictureUrl,
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    )
-                        : const Icon(Icons.local_florist, size: 150),
-                    const SizedBox(height: 20),
-                    Text(
-                      name ?? 'Unknown Plant',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                // Creating a Plant object from Firestore data
+                final plant = Plant(
+                  plantId: plantData.id,
+                  name: name,
+                  picture: pictureUrl ?? '',
+                  description: plantData['description'] ?? 'No description available.',
+                  humidity: plantData['humidity'] ?? 0,
+                  pHLevel: plantData['pHLevel'] ?? 0,
+                  sunExposure: plantData['sunExposure'] ?? 0,
+                  temperature: plantData['temperature'] ?? 0,
+                  soilMoisture: plantData['soilMoisture'] ?? 0,
+                  healthy: plantData['healthy'] ?? 0,
+                );
+
+                return GestureDetector(
+                  onTap: () {
+                    // Navigate to DetailsScreen with the selected plant
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailsScreen(plant),
                       ),
-                    ),
-                  ],
+                    );
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      pictureUrl != null
+                          ? Image.network(
+                        pictureUrl,
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      )
+                          : const Icon(Icons.local_florist, size: 150),
+                      const SizedBox(height: 20),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
               options: CarouselOptions(
@@ -143,7 +170,7 @@ class Homepage extends StatelessWidget {
                 autoPlay: true,
                 autoPlayInterval: const Duration(seconds: 3),
                 autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                aspectRatio: 16/9,
+                aspectRatio: 16 / 9,
                 viewportFraction: 0.8,
               ),
             ),
