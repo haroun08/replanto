@@ -17,7 +17,7 @@ class MyAppView extends StatelessWidget {
     return MaterialApp(
         title: 'Replanto',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(colorScheme: ColorScheme.light(background: Colors.grey.shade200, onBackground: Colors.black, primary: Colors.blue, onPrimary: Colors.white)),
+        theme: ThemeData(colorScheme: ColorScheme.light(background: Colors.grey.shade200, onBackground: Colors.black, primary: Colors.green, onPrimary: Colors.white)),
         home: BlocBuilder<AuthenticationBloc, AuthenticationState>(
           builder: ((context, state) {
             if (state.status == AuthenticationStatus.authenticated) {

@@ -1,14 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:plant_repository/plant_repository.dart';
-import 'package:replanto/app.dart';
 import 'package:replanto/screens/auth/blocs/bloc/sign_in_bloc.dart';
 
-import '../../auth/views/sign_up_screen.dart';
-import 'details_screen.dart';
+import 'widgets/CarouselPanel.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -25,7 +21,6 @@ class Homepage extends StatelessWidget {
             'assets/replanto.png',
             scale: 14,
           ),
-
         ),
         actions: [
           IconButton(
@@ -72,8 +67,9 @@ class Homepage extends StatelessWidget {
           switch (index) {
             case 0:
               Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context)=> const Homepage()));
+                context,
+                MaterialPageRoute(builder: (context) => const Homepage()),
+              );
               break;
             case 1:
             // Navigate to News Page
@@ -86,7 +82,6 @@ class Homepage extends StatelessWidget {
               break;
             case 4:
               context.read<SignInBloc>().add(SignOutRequired());
-
               break;
           }
         },
@@ -108,73 +103,7 @@ class Homepage extends StatelessWidget {
             return const Center(child: Text('No plants found.'));
           }
 
-          return Center(
-            child: CarouselSlider.builder(
-              itemCount: plants.length,
-              itemBuilder: (context, index, realIndex) {
-                final plantData = plants[index];
-                final name = plantData['name'] ?? 'Unknown Plant';
-                final pictureUrl = plantData['picture'];
-
-                // Creating a Plant object from Firestore data
-                final plant = Plant(
-                  plantId: plantData.id,
-                  name: name,
-                  picture: pictureUrl ?? '',
-                  description: plantData['description'] ?? 'No description available.',
-                  humidity: plantData['humidity'] ?? 0,
-                  pHLevel: plantData['pHLevel'] ?? 0,
-                  sunExposure: plantData['sunExposure'] ?? 0,
-                  temperature: plantData['temperature'] ?? 0,
-                  soilMoisture: plantData['soilMoisture'] ?? 0,
-                  healthy: plantData['healthy'] ?? 0,
-                );
-
-                return GestureDetector(
-                  onTap: () {
-                    // Navigate to DetailsScreen with the selected plant
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailsScreen(plant),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      pictureUrl != null
-                          ? Image.network(
-                        pictureUrl,
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.cover,
-                      )
-                          : const Icon(Icons.local_florist, size: 150),
-                      const SizedBox(height: 20),
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              options: CarouselOptions(
-                height: 300,
-                enlargeCenterPage: true,
-                autoPlay: true,
-                autoPlayInterval: const Duration(seconds: 3),
-                autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                aspectRatio: 16 / 9,
-                viewportFraction: 0.8,
-              ),
-            ),
-          );
+          return CarouselPanel(plantDocuments: plants);
         },
       ),
     );

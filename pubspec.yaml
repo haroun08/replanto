@@ -47,6 +47,8 @@ dependencies:
   plant_repository:
     path: packages/plant_repository
   carousel_slider: ^5.0.0
+  stacked_card_carousel: ^0.0.4
+
 
 
 dev_dependencies:
