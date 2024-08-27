@@ -50,7 +50,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: Center(
           child: Column(
             children: [
-              const SizedBox(height: 20),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.9,
                 child: MyTextField(

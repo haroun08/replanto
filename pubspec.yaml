@@ -48,6 +48,8 @@ dependencies:
     path: packages/plant_repository
   carousel_slider: ^5.0.0
   stacked_card_carousel: ^0.0.4
+  bottom_navy_bar: ^6.1.0
+  firebase_messaging: ^15.1.0
 
 
 

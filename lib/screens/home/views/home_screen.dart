@@ -3,17 +3,59 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:replanto/screens/auth/blocs/bloc/sign_in_bloc.dart';
+import 'package:bottom_navy_bar/bottom_navy_bar.dart'; // Import the BottomNavyBar package
 
+import 'createPlant.dart';
 import 'widgets/CarouselPanel.dart';
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   const Homepage({super.key});
+
+  @override
+  _HomepageState createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  String _searchQuery = '';
+  int _selectedIndex = 0; // Track the selected index for BottomNavyBar
+
+  void _updateSearchQuery(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+  }
+
+  void _onItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Homepage()),
+        );
+        break;
+      case 1:
+      // Navigate to News Page
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AddPlantScreen()),
+        );
+        break;
+      case 3:
+        context.read<SignInBloc>().add(SignOutRequired());
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -36,58 +78,60 @@ class Homepage extends StatelessWidget {
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(50),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              onChanged: _updateSearchQuery,
+              decoration: const InputDecoration(
+                hintText: 'Find your plant...',
+                border: InputBorder.none,
+                filled: true,
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: BottomNavyBar(
+        selectedIndex: _selectedIndex,
+        showElevation: true,
+        itemCornerRadius: 24,
+        containerHeight: 56,
+        backgroundColor: Colors.white,
+        onItemSelected: _onItemSelected,
+        items: [
+          BottomNavyBarItem(
             icon: Icon(CupertinoIcons.home),
-            label: 'Home',
+            title: Text('Home'),
+            activeColor: Colors.green,
           ),
-          BottomNavigationBarItem(
+          BottomNavyBarItem(
             icon: Icon(CupertinoIcons.news_solid),
-            label: 'News',
+            title: Text('News'),
+            activeColor: Colors.green,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.add_circled_solid, size: 40), // Larger + icon
-            label: 'Add Plant',
+          BottomNavyBarItem(
+            icon: Icon(CupertinoIcons.add_circled_solid, size: 30),
+            title: Text('Add Plant'),
+            activeColor: Colors.green,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.search_circle_fill),
-            label: 'Research',
-          ),
-          BottomNavigationBarItem(
+          BottomNavyBarItem(
             icon: Icon(CupertinoIcons.arrow_right_to_line),
-            label: 'Logout',
+            title: Text('Logout'),
+            activeColor: Colors.green,
           ),
         ],
-        onTap: (index) {
-          // Handle navigation on tap
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const Homepage()),
-              );
-              break;
-            case 1:
-            // Navigate to News Page
-              break;
-            case 2:
-            // Add Plant action
-              break;
-            case 3:
-            // Navigate to Research Page
-              break;
-            case 4:
-              context.read<SignInBloc>().add(SignOutRequired());
-              break;
-          }
-        },
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('plants').snapshots(),
+        stream: _searchQuery.isEmpty
+            ? FirebaseFirestore.instance.collection('plants').snapshots()
+            : FirebaseFirestore.instance
+            .collection('plants')
+            .where('name', isGreaterThanOrEqualTo: _searchQuery)
+            .where('name', isLessThan: '$_searchQuery\uf8ff')
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(child: Text('Error loading plants.'));
