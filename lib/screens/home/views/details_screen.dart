@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:plant_repository/plant_repository.dart';
 import 'package:replanto/screens/home/views/widgets/UserPost.dart';
 import 'package:replanto/screens/home/views/widgets/feedback.dart';
 
 class DetailsScreen extends StatelessWidget {
   final Plant plant;
-  const DetailsScreen(this.plant, {super.key});
 
+  const DetailsScreen(this.plant, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    print('Plant ID: ${plant.plantId}');
+    print('Plant Name: ${plant.name}');
+    print('Plant Description: ${plant.description}');
+    print('User ID: ${plant.userId}');
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
@@ -62,11 +66,11 @@ class DetailsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              UserInfoSection(userId: plant.userId), // Use the new widget
+              UserInfoSection(userId: plant.userId ?? 'Unknown User ID'),
               const SizedBox(height: 20),
               _buildPlantAttributes(context, plant),
               const SizedBox(height: 20),
-              FeedbackSection(plantId: plant.plantId), // Use FeedbackSection widget
+              FeedbackSection(plantId: plant.plantId),
             ],
           ),
         ),

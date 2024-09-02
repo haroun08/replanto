@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 
 class FeedbackSection extends StatefulWidget {
   final String plantId;
@@ -40,6 +41,15 @@ class _FeedbackSectionState extends State<FeedbackSection> {
     } catch (e) {
       return 'https://example.com/default-picture.jpg';
     }
+  }
+
+  void _navigateToUserProfile(String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(userId: userId),
+      ),
+    );
   }
 
   @override
@@ -125,8 +135,11 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                           return const Icon(Icons.error);
                         } else if (pictureSnapshot.hasData) {
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(pictureSnapshot.data!),
+                            leading: GestureDetector(
+                              onTap: () => _navigateToUserProfile(userId),
+                              child: CircleAvatar(
+                                backgroundImage: NetworkImage(pictureSnapshot.data!),
+                              ),
                             ),
                             title: Text(userName),
                             subtitle: Text(comment['comment']),

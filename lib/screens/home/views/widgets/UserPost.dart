@@ -7,37 +7,34 @@ class UserInfoSection extends StatelessWidget {
 
   const UserInfoSection({required this.userId, super.key});
 
-  Future<Map<String, String?>> _fetchUserData(String userId) async {
+  Future<Map<String, String>> _fetchUserData(String userId) async {
     try {
       if (userId.isEmpty) {
-        throw Exception('User ID is empty');
+        return {'name': 'Unknown User', 'picture': ''};
       }
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (doc.exists) {
         final data = doc.data();
-        if (data != null) {
+        if (data != null && data.containsKey('name') && data.containsKey('picture')) {
           return {
             'name': data['name'] ?? 'Unknown',
-            'picture': data['picture'] ?? 'https://example.com/default-picture.jpg',
+            'picture': data['picture'] ?? '',
           };
         } else {
-          throw Exception('User data is null');
+          throw Exception('User name or picture field is missing');
         }
       } else {
         throw Exception('User not found');
       }
     } catch (e) {
-      print('Error fetching user data: $e');  // Debug print
-      return {
-        'name': 'Error',
-        'picture': 'https://example.com/default-picture.jpg',
-      };
+      print('Error fetching user data: $e'); // Detailed error message
+      return {'name': 'Error', 'picture': ''};
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, String?>>(
+    return FutureBuilder<Map<String, String>>(
       future: _fetchUserData(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,29 +42,24 @@ class UserInfoSection extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Text('Error fetching user details: ${snapshot.error}');
         } else if (snapshot.hasData) {
-          final userData = snapshot.data!;
-          final userName = userData['name']!;
-          final userPicture = userData['picture']!;
+          final userName = snapshot.data!['name']!;
+          final userPicture = snapshot.data!['picture']!;
           return Row(
             children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(userPicture),
-                radius: 20,
-              ),
-              const SizedBox(width: 10),
+              if (userPicture.isNotEmpty)
+                CircleAvatar(
+                  backgroundImage: NetworkImage(userPicture),
+                  radius: 20,
+                ),
+              const SizedBox(width: 10), // Add some spacing between picture and text
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Published by: $userName',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Published by: $userName',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
               ElevatedButton(
@@ -75,8 +67,7 @@ class UserInfoSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          UserProfileScreen(userId: userId),
+                      builder: (context) => UserProfileScreen(userId: userId),
                     ),
                   );
                 },

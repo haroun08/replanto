@@ -1,4 +1,5 @@
 class PlantEntity {
+  // Fields
   String plantId;
   String picture;
   String name;
@@ -11,7 +12,7 @@ class PlantEntity {
   int healthy;
   String userId;
 
-
+  // Constructor
   PlantEntity({
     required this.plantId,
     required this.picture,
@@ -38,10 +39,11 @@ class PlantEntity {
       'temperature': temperature,
       'soilMoisture': soilMoisture,
       'healthy': healthy,
-      'userId' : userId,
+      'userId': userId,
     };
   }
 
+  // Create from Map
   static PlantEntity fromDocument(Map<String, dynamic> doc) {
     return PlantEntity(
       plantId: doc['plantId'] ?? '',
@@ -57,5 +59,4 @@ class PlantEntity {
       userId: doc['userId'] ?? '',
     );
   }
-
 }

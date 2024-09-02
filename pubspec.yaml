@@ -51,8 +51,12 @@ dependencies:
   stacked_card_carousel: ^0.0.4
   bottom_navy_bar: ^6.1.0
   firebase_messaging: ^15.1.0
+  flutter_launcher_icons: ^0.13.1
 
-
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/replanto.png"
 
 dev_dependencies:
   flutter_test:

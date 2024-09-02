@@ -13,6 +13,7 @@ class FirebasePlantRepo implements PlantRepo {
     FirebaseAuth? firebaseAuth,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
+  @override
   Future<void> addPlant(Plant plant) async {
     try {
       final user = _firebaseAuth.currentUser;
@@ -31,6 +32,10 @@ class FirebasePlantRepo implements PlantRepo {
     }
   }
 
+
+
+
+
   @override
   Future<List<Plant>> getPlants() async {
     try {
@@ -43,9 +48,10 @@ class FirebasePlantRepo implements PlantRepo {
           .where('userId', isEqualTo: user.uid)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => Plant.fromEntity(PlantEntity.fromDocument(doc.data())))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final plantEntity = PlantEntity.fromDocument(doc.data());
+        return Plant.fromEntity(plantEntity);
+      }).toList();
     } catch (e) {
       log('Failed to fetch plants: $e');
       return [];
