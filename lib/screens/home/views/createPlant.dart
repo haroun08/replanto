@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -166,22 +168,21 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         'temperature': int.tryParse(_temperatureController.text) ?? 0,
         'soilMoisture': int.tryParse(_soilMoistureController.text) ?? 0,
         'healthy': int.tryParse(_healthyController.text) ?? 0,
-        'userId': widget.userId, // Include the userId here
+        'userId': widget.userId,
       };
 
       try {
-        // Add plant to Firestore
         final docRef = await FirebaseFirestore.instance.collection('plants').add(plant);
 
-        // Update user with new plant ID
         final userId = widget.userId;
         await FirebaseFirestore.instance.collection('users').doc(userId).update({
-          'plants': FieldValue.arrayUnion([docRef.id]),
+          'plants': FieldValue.arrayUnion([plant]),
         });
+        log('Document path: ${FirebaseFirestore.instance.collection('users').doc(userId).path}');
 
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Plant added successfully!')),
+          const SnackBar(content: Text('Plant added successfully!')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

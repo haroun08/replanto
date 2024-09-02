@@ -10,7 +10,6 @@ class PlantEntity {
   int soilMoisture;
   int healthy;
   String userId;
-  String userName;
 
 
   PlantEntity({
@@ -25,7 +24,6 @@ class PlantEntity {
     required this.soilMoisture,
     required this.healthy,
     required this.userId,
-    required this.userName
   });
 
   Map<String, Object?> toDocument() {
@@ -41,24 +39,23 @@ class PlantEntity {
       'soilMoisture': soilMoisture,
       'healthy': healthy,
       'userId' : userId,
-      'userName' : userName
     };
   }
 
   static PlantEntity fromDocument(Map<String, dynamic> doc) {
     return PlantEntity(
-      plantId: doc['plantId'],
-      picture: doc['picture'],
-      name: doc['name'],
-      description: doc['description'],
-      humidity: doc['humidity'],
-      pHLevel: doc['pHLevel'],
-      sunExposure: doc['sunExposure'],
-      temperature: doc['temperature'],
-      soilMoisture: doc['soilMoisture'],
-      healthy : doc['healthy'],
-      userId : doc['userId'],
-      userName: doc['userName']
+      plantId: doc['plantId'] ?? '',
+      picture: doc['picture'] ?? '',
+      name: doc['name'] ?? '',
+      description: doc['description'] ?? '',
+      humidity: doc['humidity'] ?? 0,
+      pHLevel: doc['pHLevel'] ?? 0,
+      sunExposure: doc['sunExposure'] ?? 0,
+      temperature: doc['temperature'] ?? 0,
+      soilMoisture: doc['soilMoisture'] ?? 0,
+      healthy: doc['healthy'] ?? 0,
+      userId: doc['userId'] ?? '',
     );
   }
+
 }

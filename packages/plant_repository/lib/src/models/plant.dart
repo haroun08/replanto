@@ -12,7 +12,6 @@ class Plant {
   int soilMoisture;
   int healthy;
   String userId;
-  String userName;
 
 
   Plant({
@@ -27,7 +26,6 @@ class Plant {
     required this.soilMoisture,
     required this.healthy,
     required this.userId,
-    required this.userName
   });
 
   PlantEntity toEntity() {
@@ -43,7 +41,6 @@ class Plant {
       soilMoisture: soilMoisture,
       healthy :healthy,
       userId : userId,
-      userName: userName
     );
   }
 
@@ -60,7 +57,6 @@ class Plant {
       soilMoisture: entity.soilMoisture,
       healthy: entity.healthy,
       userId: entity.userId,
-      userName: entity.userName
     );
   }
 }

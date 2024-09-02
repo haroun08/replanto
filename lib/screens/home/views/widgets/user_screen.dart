@@ -13,50 +13,19 @@ class UserProfileScreen extends StatelessWidget {
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (doc.exists) {
         final data = doc.data()!;
-
         print('Retrieved user data: $data');
 
-        final plantIds = List<String>.from(data['plants'] ?? []);
-
-        final plantFutures = plantIds.map((plantId) async {
-          if (plantId.isEmpty) {
-            throw Exception('Invalid plant ID');
-          }
-
-          try {
-            final plantDoc = await FirebaseFirestore.instance.collection('plants').doc(plantId).get();
-            if (plantDoc.exists) {
-              return PlantEntity.fromDocument(plantDoc.data()!);
-            } else {
-              throw Exception('Plant not found');
-            }
-          } catch (e) {
-            print('Error fetching plant $plantId: $e');
-            rethrow;
-          }
-        }).toList();
-
-        final plants = await Future.wait(plantFutures);
-
-        final userEntity = MyUserEntity(
-          userId: data['userId'] ?? 'Unknown',
-          email: data['email'] ?? 'No email',
-          name: data['name'] ?? 'No name',
-          age: data['age'] ?? 0,
-          picture: data['picture'] ?? '', // Provide a default value
-          plants: plants,
-        );
-
+        final userEntity = MyUserEntity.fromDocument(data);
         return MyUser.fromEntity(userEntity);
       } else {
         throw Exception('User not found');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error fetching user details: $e');
+      print('Stack trace: $stackTrace');
       throw Exception('Failed to fetch user details: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +99,8 @@ class UserProfileScreen extends StatelessWidget {
                     itemCount: user.plants.length,
                     itemBuilder: (context, index) {
                       final plant = user.plants[index];
+                      print('Plant data: $plant'); // Add this log to inspect plant data
+
                       return Card(
                         elevation: 4,
                         child: Column(
@@ -137,21 +108,21 @@ class UserProfileScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Image.network(
-                                plant.picture,
+                                plant.picture ?? 'https://example.com/default-plant-picture.jpg',
                                 fit: BoxFit.cover,
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                plant.name,
+                                plant.name ?? 'Unnamed plant',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
-                                plant.description,
+                                plant.description ?? 'No description',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),

@@ -20,32 +20,35 @@ class FirebasePlantRepo implements PlantRepo {
         throw Exception('No user is currently logged in');
       }
 
-      // Add plant to Firestore
       await plantsCollection.doc(plant.plantId).set(plant.toEntity().toDocument());
 
-      // Update the user with the new plant ID
       await usersCollection.doc(user.uid).update({
         'plants': FieldValue.arrayUnion([plant.plantId]),
       });
     } catch (e) {
-      log(e.toString());
+      log('Failed to add plant: $e');
       rethrow;
     }
   }
 
   @override
   Future<List<Plant>> getPlants() async {
-    final user = _firebaseAuth.currentUser;
-    if (user == null) {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return [];
+      }
+
+      final querySnapshot = await plantsCollection
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => Plant.fromEntity(PlantEntity.fromDocument(doc.data())))
+          .toList();
+    } catch (e) {
+      log('Failed to fetch plants: $e');
       return [];
     }
-
-    final querySnapshot = await plantsCollection
-        .where('userId', isEqualTo: user.uid)
-        .get();
-
-    return querySnapshot.docs
-        .map((doc) => Plant.fromEntity(PlantEntity.fromDocument(doc.data())))
-        .toList();
   }
 }

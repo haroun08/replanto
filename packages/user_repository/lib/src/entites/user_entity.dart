@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import 'package:plant_repository/plant_repository.dart';
 
 class MyUserEntity {
@@ -28,15 +30,37 @@ class MyUserEntity {
       'plants': plants.map((plant) => plant.toDocument()).toList(),
     };
   }
-
   static MyUserEntity fromDocument(Map<String, dynamic> doc) {
-    return MyUserEntity(
-      userId: doc['userId'],
-      email: doc['email'],
-      name: doc['name'],
-      age: doc['age'],
-      picture: doc['picture'],
-      plants: List<Map<String, dynamic>>.from(doc['plants'] ?? []).map((plantDoc) => PlantEntity.fromDocument(plantDoc)).toList(),
-    );
+    try {
+      final userId = doc['userId'] ?? '';
+      final email = doc['email'] ?? '';
+      final name = doc['name'] ?? '';
+      final age = doc['age'] ?? 0;
+      final picture = doc['picture'] ?? '';
+      final plants = (doc['plants'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map((plantDoc) {
+        try {
+          return PlantEntity.fromDocument(plantDoc);
+        } catch (e) {
+          log('Error creating PlantEntity from document: $e');
+          rethrow;
+        }
+      })
+          .toList();
+
+      return MyUserEntity(
+        userId: userId,
+        email: email,
+        name: name,
+        age: age,
+        picture: picture,
+        plants: plants,
+      );
+    } catch (e) {
+      log('Error creating MyUserEntity from document: $e');
+      rethrow;
+    }
   }
+
 }
