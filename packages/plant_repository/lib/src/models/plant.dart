@@ -11,6 +11,9 @@ class Plant {
   int temperature;
   int soilMoisture;
   int healthy;
+  String userId;
+  String userName;
+
 
   Plant({
     required this.plantId,
@@ -22,7 +25,9 @@ class Plant {
     required this.sunExposure,
     required this.temperature,
     required this.soilMoisture,
-    required this.healthy
+    required this.healthy,
+    required this.userId,
+    required this.userName
   });
 
   PlantEntity toEntity() {
@@ -36,7 +41,9 @@ class Plant {
       sunExposure: sunExposure,
       temperature: temperature,
       soilMoisture: soilMoisture,
-      healthy :healthy
+      healthy :healthy,
+      userId : userId,
+      userName: userName
     );
   }
 
@@ -51,7 +58,9 @@ class Plant {
       sunExposure: entity.sunExposure,
       temperature: entity.temperature,
       soilMoisture: entity.soilMoisture,
-      healthy: entity.healthy
+      healthy: entity.healthy,
+      userId: entity.userId,
+      userName: entity.userName
     );
   }
 }

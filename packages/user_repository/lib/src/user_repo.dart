@@ -1,3 +1,5 @@
+import 'package:plant_repository/plant_repository.dart';
+
 import 'models/models.dart';
 
 abstract class UserRepository {
@@ -10,4 +12,5 @@ abstract class UserRepository {
   Future<void> signIn(String email, String password);
 
   Future<void> logOut();
+
 }

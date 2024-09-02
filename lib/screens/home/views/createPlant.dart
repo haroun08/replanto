@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddPlantScreen extends StatefulWidget {
+  final String userId; // Add this line to accept userId
+
+  const AddPlantScreen({Key? key, required this.userId}) : super(key: key); // Modify constructor
+
   @override
   _AddPlantScreenState createState() => _AddPlantScreenState();
 }
@@ -100,7 +105,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 keyboardType: TextInputType.number,
                 validatorMessage: 'Please enter healthy level',
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Center(
                 child: ElevatedButton.icon(
                   onPressed: _submit,
@@ -161,10 +166,19 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         'temperature': int.tryParse(_temperatureController.text) ?? 0,
         'soilMoisture': int.tryParse(_soilMoistureController.text) ?? 0,
         'healthy': int.tryParse(_healthyController.text) ?? 0,
+        'userId': widget.userId, // Include the userId here
       };
 
       try {
-        await FirebaseFirestore.instance.collection('plants').add(plant);
+        // Add plant to Firestore
+        final docRef = await FirebaseFirestore.instance.collection('plants').add(plant);
+
+        // Update user with new plant ID
+        final userId = widget.userId;
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+          'plants': FieldValue.arrayUnion([docRef.id]),
+        });
+
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Plant added successfully!')),

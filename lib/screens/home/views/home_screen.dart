@@ -1,23 +1,37 @@
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:replanto/screens/auth/blocs/bloc/sign_in_bloc.dart';
-import 'package:bottom_navy_bar/bottom_navy_bar.dart'; // Import the BottomNavyBar package
+import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
+import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 
+import '../../auth/blocs/bloc/sign_in_bloc.dart';
 import 'createPlant.dart';
-import 'widgets/CarouselPanel.dart';
-
 class Homepage extends StatefulWidget {
-  const Homepage({super.key});
+  const Homepage({Key? key}) : super(key: key);
 
   @override
   _HomepageState createState() => _HomepageState();
 }
-
 class _HomepageState extends State<Homepage> {
   String _searchQuery = '';
   int _selectedIndex = 0; // Track the selected index for BottomNavyBar
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserId();
+  }
+
+  void _fetchUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _userId = user?.uid;
+    });
+  }
 
   void _updateSearchQuery(String query) {
     setState(() {
@@ -43,7 +57,7 @@ class _HomepageState extends State<Homepage> {
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => AddPlantScreen()),
+          MaterialPageRoute(builder: (context) => AddPlantScreen(userId: _userId!)),
         );
         break;
       case 3:
@@ -72,9 +86,21 @@ class _HomepageState extends State<Homepage> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.settings, color: Colors.green),
+            icon: Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
             onPressed: () {
-              // Parameter button action
+              if (_userId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfileScreen(userId: _userId!),
+                  ),
+                );
+              } else {
+                // Handle case where user is not logged in
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('User is not logged in')),
+                );
+              }
             },
           ),
         ],

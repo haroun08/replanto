@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:plant_repository/src/models/plant.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:user_repository/src/entites/entities.dart';
 import 'package:user_repository/src/models/user.dart';
@@ -18,17 +19,25 @@ class FirebaseUserRepo implements UserRepository {
   @override
   Stream<MyUser?> get user {
     return _firebaseAuth.authStateChanges().flatMap((firebaseUser) async* {
-      if(firebaseUser == null) {
+      if (firebaseUser == null) {
         yield MyUser.empty;
       } else {
         yield await usersCollection
             .doc(firebaseUser.uid)
             .get()
-            .then((value) => MyUser.fromEntity(MyUserEntity.fromDocument(value.data()!)));
+            .then((snapshot) {
+          if (snapshot.exists) {
+            return MyUser.fromEntity(MyUserEntity.fromDocument(snapshot.data()!));
+          } else {
+            return MyUser.empty;
+          }
+        }).catchError((e) {
+          log('Error fetching user details: $e');
+          return MyUser.empty;
+        });
       }
     });
   }
-
   @override
   Future<void> signIn(String email, String password) async {
     try {
@@ -71,9 +80,9 @@ class FirebaseUserRepo implements UserRepository {
       rethrow;
     }
   }
-
-
-
-
-
 }
+
+
+
+
+

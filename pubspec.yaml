@@ -41,6 +41,7 @@ dependencies:
   bloc: ^8.1.4
   font_awesome_flutter: ^10.7.0
   cloud_firestore: ^5.2.1
+  firebase_auth: ^5.1.4
 
   user_repository:
     path: packages/user_repository

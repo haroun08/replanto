@@ -14,6 +14,9 @@ dependencies:
   cloud_firestore: ^5.2.1
   rxdart: ^0.28.0
 
+  plant_repository:
+    path: ../plant_repository
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

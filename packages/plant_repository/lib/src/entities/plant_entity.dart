@@ -9,6 +9,9 @@ class PlantEntity {
   int temperature;
   int soilMoisture;
   int healthy;
+  String userId;
+  String userName;
+
 
   PlantEntity({
     required this.plantId,
@@ -20,7 +23,9 @@ class PlantEntity {
     required this.sunExposure,
     required this.temperature,
     required this.soilMoisture,
-    required this.healthy
+    required this.healthy,
+    required this.userId,
+    required this.userName
   });
 
   Map<String, Object?> toDocument() {
@@ -34,7 +39,9 @@ class PlantEntity {
       'sunExposure': sunExposure,
       'temperature': temperature,
       'soilMoisture': soilMoisture,
-      'healthy': healthy
+      'healthy': healthy,
+      'userId' : userId,
+      'userName' : userName
     };
   }
 
@@ -49,8 +56,9 @@ class PlantEntity {
       sunExposure: doc['sunExposure'],
       temperature: doc['temperature'],
       soilMoisture: doc['soilMoisture'],
-      healthy : doc['healthy']
-
+      healthy : doc['healthy'],
+      userId : doc['userId'],
+      userName: doc['userName']
     );
   }
 }
