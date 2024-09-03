@@ -1,13 +1,15 @@
+import 'dart:io';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddPlantScreen extends StatefulWidget {
-  final String userId; // Add this line to accept userId
+  final String userId;
 
-  const AddPlantScreen({Key? key, required this.userId}) : super(key: key); // Modify constructor
+  const AddPlantScreen({Key? key, required this.userId}) : super(key: key);
 
   @override
   _AddPlantScreenState createState() => _AddPlantScreenState();
@@ -16,7 +18,6 @@ class AddPlantScreen extends StatefulWidget {
 class _AddPlantScreenState extends State<AddPlantScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _pictureController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _humidityController = TextEditingController();
   final _pHLevelController = TextEditingController();
@@ -24,6 +25,31 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
   final _temperatureController = TextEditingController();
   final _soilMoistureController = TextEditingController();
   final _healthyController = TextEditingController();
+
+  File? _image;
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadImage(File image) async {
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child('plant_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final uploadTask = storageRef.putFile(image);
+
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      log('Error uploading image: $e');
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +72,6 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 hintText: 'Enter the plant name',
                 icon: Icons.nature,
                 validatorMessage: 'Please enter a name',
-              ),
-              _buildTextField(
-                controller: _pictureController,
-                label: 'Picture URL',
-                hintText: 'Enter the picture URL',
-                icon: Icons.image,
               ),
               _buildTextField(
                 controller: _descriptionController,
@@ -110,11 +130,24 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
               const SizedBox(height: 20),
               Center(
                 child: ElevatedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Pick Image'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              if (_image != null)
+                Image.file(_image!, height: 150), // Display picked image
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton.icon(
                   onPressed: _submit,
-                  icon: Icon(Icons.add),
-                  label: Text('Add Plant'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Plant'),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: theme.primaryColor, padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    foregroundColor: Colors.white,
+                    backgroundColor: theme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -158,9 +191,24 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
+      if (_image == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please pick an image')),
+        );
+        return;
+      }
+
+      String? imageUrl = await _uploadImage(_image!);
+      if (imageUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image upload failed')),
+        );
+        return;
+      }
+
       final plant = {
         'name': _nameController.text,
-        'picture': _pictureController.text,
+        'picture': imageUrl,
         'description': _descriptionController.text,
         'humidity': int.tryParse(_humidityController.text) ?? 0,
         'pHLevel': int.tryParse(_pHLevelController.text) ?? 0,
@@ -173,18 +221,20 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
       try {
         final docRef = await FirebaseFirestore.instance.collection('plants').add(plant);
+        log('Plant document added with ID: ${docRef.id}');
 
         final userId = widget.userId;
         await FirebaseFirestore.instance.collection('users').doc(userId).update({
-          'plants': FieldValue.arrayUnion([plant]),
+          'plants': FieldValue.arrayUnion([plant]), // Pass the full plant object
         });
-        log('Document path: ${FirebaseFirestore.instance.collection('users').doc(userId).path}');
+        log('Updated user document for userId: $userId with new plant details');
 
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Plant added successfully!')),
         );
       } catch (e) {
+        log('Error adding plant: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add plant: $e')),
         );

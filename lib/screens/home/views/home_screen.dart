@@ -88,7 +88,7 @@ class _HomepageState extends State<Homepage> {
             },
           ),
           IconButton(
-            icon: Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
+            icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
             onPressed: () {
               if (_userId != null) {
                 Navigator.push(

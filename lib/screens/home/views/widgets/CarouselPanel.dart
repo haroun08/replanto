@@ -27,7 +27,8 @@ class CarouselPanel extends StatelessWidget {
             sunExposure: plantData['sunExposure'] ?? 0,
             temperature: plantData['temperature'] ?? 0,
             soilMoisture: plantData['soilMoisture'] ?? 0,
-            healthy: plantData['healthy'] ?? 0, userId: plantData['userId'],
+            healthy: plantData['healthy'] ?? 0,
+            userId: plantData['userId'],
           );
 
           return GestureDetector(
