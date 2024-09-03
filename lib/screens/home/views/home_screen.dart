@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
+import 'package:replanto/screens/home/views/widgets/community_page.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 
 import '../../auth/blocs/bloc/sign_in_bloc.dart';
@@ -52,7 +53,10 @@ class _HomepageState extends State<Homepage> {
         );
         break;
       case 1:
-      // Navigate to News Page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>const CommunityPage() )
+        );
         break;
       case 2:
         Navigator.push(
@@ -60,9 +64,7 @@ class _HomepageState extends State<Homepage> {
           MaterialPageRoute(builder: (context) => AddPlantScreen(userId: _userId!)),
         );
         break;
-      case 3:
-        context.read<SignInBloc>().add(SignOutRequired());
-        break;
+
     }
   }
 
@@ -134,18 +136,13 @@ class _HomepageState extends State<Homepage> {
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
-            icon: Icon(CupertinoIcons.news_solid),
-            title: Text('News'),
+            icon: const Icon(CupertinoIcons.news_solid),
+            title: const Text('Community'),
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
             icon: Icon(CupertinoIcons.add_circled_solid, size: 30),
             title: Text('Add Plant'),
-            activeColor: Colors.green,
-          ),
-          BottomNavyBarItem(
-            icon: Icon(CupertinoIcons.arrow_right_to_line),
-            title: Text('Logout'),
             activeColor: Colors.green,
           ),
         ],
