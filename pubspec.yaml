@@ -52,6 +52,7 @@ dependencies:
   bottom_navy_bar: ^6.1.0
   firebase_messaging: ^15.1.0
   flutter_launcher_icons: ^0.13.1
+  intl: ^0.19.0
 
 flutter_launcher_icons:
   android: "launcher_icon"

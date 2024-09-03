@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:plant_repository/plant_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 class UserProfileScreen extends StatelessWidget {
