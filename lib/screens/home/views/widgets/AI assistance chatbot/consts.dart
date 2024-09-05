@@ -1,0 +1,3 @@
+const OPENAI_API_KEY= "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";
+
+const GEMINI_APi_KEY = "AIzaSyA7tsnWNHwWYFURg1QoJe47FbAw2GkyOYw";

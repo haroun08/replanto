@@ -3,9 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
-import 'package:replanto/screens/home/views/widgets/community_page.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 
 import '../../auth/blocs/bloc/sign_in_bloc.dart';
@@ -55,7 +54,7 @@ class _HomepageState extends State<Homepage> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) =>const CommunityPage() )
+          MaterialPageRoute(builder: (context) =>const ChatPage() )
         );
         break;
       case 2:

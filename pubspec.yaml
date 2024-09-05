@@ -42,6 +42,8 @@ dependencies:
   font_awesome_flutter: ^10.7.0
   cloud_firestore: ^5.2.1
   firebase_auth: ^5.1.4
+  dash_chat_2: ^0.0.21
+  google_generative_ai: ^0.4.6
 
   user_repository:
     path: packages/user_repository
@@ -57,6 +59,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   firebase_storage: ^12.2.0
   firebase_app_check: ^0.3.0+5
+  chat_gpt_sdk: ^3.1.0
 
 flutter_launcher_icons:
   android: "launcher_icon"

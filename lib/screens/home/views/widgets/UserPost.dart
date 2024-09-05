@@ -27,7 +27,7 @@ class UserInfoSection extends StatelessWidget {
         throw Exception('User not found');
       }
     } catch (e) {
-      print('Error fetching user data: $e'); // Detailed error message
+      print('Error fetching user data: $e');
       return {'name': 'Error', 'picture': ''};
     }
   }
@@ -51,7 +51,7 @@ class UserInfoSection extends StatelessWidget {
                   backgroundImage: NetworkImage(userPicture),
                   radius: 20,
                 ),
-              const SizedBox(width: 10), // Add some spacing between picture and text
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Published by: $userName',

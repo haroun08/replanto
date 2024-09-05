@@ -17,6 +17,7 @@ class _FeedbackSectionState extends State<FeedbackSection> {
   final TextEditingController _commentController = TextEditingController();
   String? _replyingToCommentId; // Track which comment user is replying to
   final TextEditingController _replyController = TextEditingController();
+  String? _editingCommentId; // Track which comment is being edited
 
   Future<String> _fetchUserName(String userId) async {
     try {
@@ -89,6 +90,34 @@ class _FeedbackSectionState extends State<FeedbackSection> {
     }
   }
 
+  void _editComment(String commentId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (_commentController.text.isNotEmpty && userId != null) {
+      await FirebaseFirestore.instance
+          .collection('plants')
+          .doc(widget.plantId)
+          .collection('comments')
+          .doc(commentId)
+          .update({
+        'comment': _commentController.text,
+        'timestamp': Timestamp.now(),
+      });
+      setState(() {
+        _editingCommentId = null; // Reset editing comment
+      });
+      _commentController.clear();
+    }
+  }
+
+  void _deleteComment(String commentId) async {
+    await FirebaseFirestore.instance
+        .collection('plants')
+        .doc(widget.plantId)
+        .collection('comments')
+        .doc(commentId)
+        .delete();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -108,7 +137,13 @@ class _FeedbackSectionState extends State<FeedbackSection> {
             hintText: 'Leave a comment...',
             suffixIcon: IconButton(
               icon: const Icon(Icons.send),
-              onPressed: _postComment,
+              onPressed: () {
+                if (_editingCommentId != null) {
+                  _editComment(_editingCommentId!);
+                } else {
+                  _postComment();
+                }
+              },
             ),
           ),
         ),
@@ -138,6 +173,7 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                 final comment = comments[index];
                 final userId = comment['userId'];
                 final commentId = comment.id;
+                final currentUser = FirebaseAuth.instance.currentUser;
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
                   child: Padding(
@@ -212,6 +248,24 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                                             ),
                                           ),
                                         ),
+                                        if (userId == currentUser?.uid) // Check if the comment belongs to the current user
+                                          Row(
+                                            children: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _editingCommentId = commentId;
+                                                    _commentController.text = comment['comment'];
+                                                  });
+                                                },
+                                                child: const Text('Edit'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => _deleteComment(commentId),
+                                                child: const Text('Delete'),
+                                              ),
+                                            ],
+                                          ),
                                       ],
                                     ),
                                     trailing: Text(
@@ -222,65 +276,6 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                                 } else {
                                   return const Icon(Icons.error);
                                 }
-                              },
-                            );
-                          },
-                        ),
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('plants')
-                              .doc(widget.plantId)
-                              .collection('comments')
-                              .doc(commentId)
-                              .collection('replies')
-                              .orderBy('timestamp')
-                              .snapshots(),
-                          builder: (context, replySnapshot) {
-                            if (replySnapshot.connectionState == ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            } else if (replySnapshot.hasError) {
-                              return const Text('Error fetching replies');
-                            } else if (!replySnapshot.hasData || replySnapshot.data!.docs.isEmpty) {
-                              return Container();
-                            }
-
-                            final replies = replySnapshot.data!.docs;
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: replies.length,
-                              itemBuilder: (context, replyIndex) {
-                                final reply = replies[replyIndex];
-                                final replyUserId = reply['userId'];
-                                return Padding(
-                                  padding: const EdgeInsets.only(left: 40.0), // Indent replies
-                                  child: FutureBuilder<String>(
-                                    future: _fetchUserName(replyUserId),
-                                    builder: (context, replyUserSnapshot) {
-                                      if (replyUserSnapshot.connectionState == ConnectionState.waiting) {
-                                        return const CircularProgressIndicator();
-                                      } else if (replyUserSnapshot.hasError) {
-                                        return const Text('Error fetching user details');
-                                      } else if (!replyUserSnapshot.hasData) {
-                                        return const Text('Unknown user');
-                                      }
-
-                                      final replyUserName = replyUserSnapshot.data!;
-                                      return ListTile(
-                                        leading: CircleAvatar(
-                                          child: Text(replyUserName[0].toUpperCase()),
-                                        ),
-                                        title: Text(replyUserName),
-                                        subtitle: Text(reply['comment']),
-                                        trailing: Text(
-                                          DateFormat('HH:mm').format((comment['timestamp'] as Timestamp).toDate()),
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-
-                                      );
-                                    },
-                                  ),
-                                );
                               },
                             );
                           },
