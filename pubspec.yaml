@@ -60,6 +60,7 @@ dependencies:
   firebase_storage: ^12.2.0
   firebase_app_check: ^0.3.0+5
   chat_gpt_sdk: ^3.1.0
+  flutter_markdown: ^0.7.3+1
 
 flutter_launcher_icons:
   android: "launcher_icon"
