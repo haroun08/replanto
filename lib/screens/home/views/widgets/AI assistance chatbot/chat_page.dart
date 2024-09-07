@@ -1,8 +1,10 @@
 import 'dart:developer';
-
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'message_widget.dart';
 import 'consts.dart';
 
@@ -14,24 +16,22 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-
   late final GenerativeModel _model;
   late final ChatSession _chatSession;
   final FocusNode _textFieldFocus = FocusNode();
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  bool _loading  = false;
+  final List<Map<String, String>> _chatHistory = []; // To store chat history locally
+  bool _loading = false;
 
   final String apiKey = GEMINI_APi_KEY;
 
   @override
   void initState() {
     super.initState();
-    _model = GenerativeModel(
-        model: 'gemini-pro',
-        apiKey: apiKey
-    );
+    _model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
     _chatSession = _model.startChat();
+    _loadChatHistory();
   }
 
   @override
@@ -39,6 +39,12 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('replanto AI bot'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_open),
+            onPressed: _pickFile, // Button to read files
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -75,16 +81,16 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.send),
+                      icon: const Icon(Icons.send),
                       onPressed: () => _sendChatMessage(_textController.text),
-                    )
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           if (_loading)
-            Center(
+            const Center(
               child: CircularProgressIndicator(),
             ),
         ],
@@ -109,6 +115,7 @@ class _ChatPageState extends State<ChatPage> {
         return;
       } else {
         log("AI response: $text", level: 800);
+        _saveMessage(message, text);
         setState(() {
           _loading = false;
           _scrollDown();
@@ -129,14 +136,30 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void _scrollDown() {
-    WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 750),
-        curve: Curves.easeOutCirc,
-      ),
-    );
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String fileContent = await file.readAsString();
+      _sendChatMessage(fileContent); // Send file content as message
+    }
+  }
+
+  void _saveMessage(String userMessage, String aiMessage) async {
+    _chatHistory.add({'user': userMessage, 'ai': aiMessage});
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/chat_history.txt');
+    await file.writeAsString(_chatHistory.toString(), mode: FileMode.append);
+  }
+
+  void _loadChatHistory() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/chat_history.txt');
+    if (await file.exists()) {
+      final history = await file.readAsString();
+      log("Chat history loaded: $history");
+    }
   }
 
   InputDecoration textFieldDecoration() {
@@ -144,20 +167,12 @@ class _ChatPageState extends State<ChatPage> {
       contentPadding: const EdgeInsets.all(15),
       hintText: 'Enter a prompt...',
       border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(14),
-        ),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.secondary,
-        ),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(14),
-        ),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.secondary,
-        ),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
       ),
     );
   }
@@ -175,10 +190,33 @@ class _ChatPageState extends State<ChatPage> {
                 Navigator.of(context).pop();
               },
               child: const Text('OK'),
-            )
+            ),
           ],
         );
       },
     );
+  }
+
+  void _scrollDown() {
+    WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 750),
+        curve: Curves.easeOutCirc,
+      ),
+    );
+  }
+
+  Future<String> getPlantAdvice(String plantId) async {
+    try{
+      final doc = await FirebaseFirestore.instance.collection('plants').doc(plantId).get();
+      if(doc.exists){
+        final plantData = doc.data();
+        return plantData != null ? plantData['advice'] ?? 'No advice available' : 'No data found';
+      }
+      return 'plant not found';
+    }catch(e){
+      return 'Error fetching plant advice: $e';
+    }
   }
 }

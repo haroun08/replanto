@@ -28,6 +28,34 @@ class Plant {
     required this.userId,
   });
 
+  Plant copyWith({
+    String? plantId,
+    String? picture,
+    String? name,
+    String? description,
+    int? humidity,
+    int? pHLevel,
+    int? sunExposure,
+    int? temperature,
+    int? soilMoisture,
+    int? healthy,
+    String? userId,
+  }) {
+    return Plant(
+      plantId: plantId ?? this.plantId,
+      picture: picture ?? this.picture,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      humidity: humidity ?? this.humidity,
+      pHLevel: pHLevel ?? this.pHLevel,
+      sunExposure: sunExposure ?? this.sunExposure,
+      temperature: temperature ?? this.temperature,
+      soilMoisture: soilMoisture ?? this.soilMoisture,
+      healthy: healthy ?? this.healthy,
+      userId: userId ?? this.userId,
+    );
+  }
+
   PlantEntity toEntity() {
     return PlantEntity(
       plantId: plantId,

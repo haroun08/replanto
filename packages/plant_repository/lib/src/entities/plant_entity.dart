@@ -43,7 +43,6 @@ class PlantEntity {
     };
   }
 
-  // Create from Map
   static PlantEntity fromDocument(Map<String, dynamic> doc) {
     return PlantEntity(
       plantId: doc['plantId'] ?? '',

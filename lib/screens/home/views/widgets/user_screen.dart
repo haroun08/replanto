@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:plant_repository/plant_repository.dart';
 import 'package:user_repository/user_repository.dart';
+import 'EditPlantPage.dart';
 
 class UserProfileScreen extends StatelessWidget {
   final String userId;
@@ -13,8 +16,6 @@ class UserProfileScreen extends StatelessWidget {
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (doc.exists) {
         final data = doc.data()!;
-        print('Retrieved user data: $data');
-
         final userEntity = MyUserEntity.fromDocument(data);
         return MyUser.fromEntity(userEntity);
       } else {
@@ -27,10 +28,25 @@ class UserProfileScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _deletePlant(String plantId) async {
+    try {
+      if (plantId.isEmpty) {
+        Fluttertoast.showToast(msg: 'Invalid plant ID');
+        return;
+      }
+      await PlantRepo.deletePlant(plantId);  // Use the repository to delete the plant
+      Fluttertoast.showToast(msg: 'Plant deleted successfully');
+    } catch (e) {
+      print('Error deleting plant: $e');
+      Fluttertoast.showToast(msg: 'Failed to delete plant');
+    }
+  }
+
+
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      Navigator.of(context).popUntil((route) => route.isFirst); // Navigate to first route (typically login)
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       print('Logout failed: $e');
     }
@@ -125,7 +141,6 @@ class UserProfileScreen extends StatelessWidget {
                       itemCount: user.plants.length,
                       itemBuilder: (context, index) {
                         final plant = user.plants[index];
-                        print('Plant data: $plant'); // Add this log to inspect plant data
 
                         return Card(
                           elevation: 4,
@@ -165,6 +180,56 @@ class UserProfileScreen extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // Edit Button
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EditPlantPage(
+                                            plant: plant, // Pass the entire plant object
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // Delete Button
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      bool? confirmDelete = await showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text('Delete Plant'),
+                                          content: Text('Are you sure you want to delete this plant?'),
+                                          actions: [
+                                            TextButton(
+                                              child: Text('Cancel'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(false);
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: Text('Delete'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(true);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirmDelete == true) {
+                                        _deletePlant(plant.plantId);
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),

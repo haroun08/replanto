@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:plant_repository/src/models/plant.dart';
+import 'package:plant_repository/plant_repository.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:user_repository/src/entites/entities.dart';
 import 'package:user_repository/src/models/user.dart';
@@ -10,34 +10,35 @@ import 'package:user_repository/src/user_repo.dart';
 
 class FirebaseUserRepo implements UserRepository {
   final FirebaseAuth _firebaseAuth;
-  final usersCollection = FirebaseFirestore.instance.collection('users');
+  final CollectionReference usersCollection = FirebaseFirestore.instance.collection('users');
+  final FirebasePlantRepo _plantRepo;
 
   FirebaseUserRepo({
     FirebaseAuth? firebaseAuth,
-  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+    required FirebasePlantRepo plantRepo,
+  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _plantRepo = plantRepo;
 
   @override
   Stream<MyUser?> get user {
-    return _firebaseAuth.authStateChanges().flatMap((firebaseUser) async* {
+    return _firebaseAuth.authStateChanges().flatMap((firebaseUser) {
       if (firebaseUser == null) {
-        yield MyUser.empty;
+        return Stream.value(MyUser.empty);
       } else {
-        yield await usersCollection
-            .doc(firebaseUser.uid)
-            .get()
-            .then((snapshot) {
+        return usersCollection.doc(firebaseUser.uid).snapshots().map((snapshot) {
           if (snapshot.exists) {
-            return MyUser.fromEntity(MyUserEntity.fromDocument(snapshot.data()!));
+            return MyUser.fromEntity(MyUserEntity.fromDocument(snapshot.data() as Map<String, dynamic>));
           } else {
             return MyUser.empty;
           }
-        }).catchError((e) {
+        }).handleError((e) {
           log('Error fetching user details: $e');
           return MyUser.empty;
         });
       }
     });
   }
+
   @override
   Future<void> signIn(String email, String password) async {
     try {
@@ -80,9 +81,32 @@ class FirebaseUserRepo implements UserRepository {
       rethrow;
     }
   }
+
+  Future<void> addPlantToUser(String userId, Plant plant) async {
+    try {
+      // Ensure plant belongs to the user
+      if (plant.userId != userId) {
+        throw Exception('The plant does not belong to the user.');
+      }
+
+      await _plantRepo.addPlant(plant);
+    } catch (e) {
+      log('Failed to add plant to user: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deletePlantFromUser(String userId, String plantId) async {
+    try {
+      final plantDoc = await _plantRepo.plantsCollection.doc(plantId).get();
+      if (plantDoc.exists && plantDoc['userId'] == userId) {
+        await _plantRepo.deletePlant(plantId);
+      } else {
+        throw Exception('The plant does not belong to the user or does not exist.');
+      }
+    } catch (e) {
+      log('Failed to delete plant from user: $e');
+      rethrow;
+    }
+  }
 }
-
-
-
-
-

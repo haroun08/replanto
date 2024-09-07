@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:stacked_card_carousel/stacked_card_carousel.dart';
 import 'package:plant_repository/plant_repository.dart';
-
+import 'package:user_repository/user_repository.dart';
 import '../details_screen.dart';
 
 class CarouselPanel extends StatelessWidget {
   final List plantDocuments;
+  final MyUser currentUser; // Add currentUser to pass to DetailsScreen
 
-  const CarouselPanel({super.key, required this.plantDocuments});
+  const CarouselPanel({
+    super.key,
+    required this.plantDocuments,
+    required this.currentUser, // Pass currentUser to the widget
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +41,10 @@ class CarouselPanel extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DetailsScreen(plant),
+                  builder: (context) => DetailsScreen(
+                    plant: plant,
+                    user: currentUser, // Pass currentUser to DetailsScreen
+                  ),
                 ),
               );
             },

@@ -1,20 +1,62 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:plant_repository/plant_repository.dart';
+import 'package:replanto/screens/home/views/widgets/EditPlantPage.dart';
+import 'package:replanto/screens/home/views/widgets/ModifyProfilePage.dart';
 import 'package:replanto/screens/home/views/widgets/UserPost.dart';
 import 'package:replanto/screens/home/views/widgets/feedback.dart';
+import 'package:user_repository/user_repository.dart';
 
 class DetailsScreen extends StatelessWidget {
   final Plant plant;
+  final MyUser user;
+  final FirebasePlantRepo plantRepo = FirebasePlantRepo();
 
-  const DetailsScreen(this.plant, {super.key});
+  DetailsScreen({required this.plant, required this.user, super.key});
+
+  Future<void> _deletePlant(BuildContext context) async {
+    try {
+      await plantRepo.deletePlant(plant.plantId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plant deleted successfully')),
+      );
+      Navigator.pop(context);
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete plant: $error')),
+      );
+    }
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Plant'),
+          content: const Text('Are you sure you want to delete this plant?'),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.pop(context);
+                _deletePlant(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    print('Plant ID: ${plant.plantId}');
-    print('Plant Name: ${plant.name}');
-    print('Plant Description: ${plant.description}');
-    print('User ID: ${plant.userId}');
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -22,6 +64,41 @@ class DetailsScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.background,
         title: Text(plant.name, style: const TextStyle(color: Colors.black)),
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          if (plant.userId == userId) ...[
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.green),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditPlantPage(plant: plant),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _showDeleteDialog(context),
+            ),
+          ],
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.green),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ModifyProfilePage(
+                    userId: user.userId,
+                    currentName: user.name ?? 'Unknown',
+                    currentAge: user.age ?? 0,
+                    currentPicture: user.picture ?? '',
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -46,8 +123,12 @@ class DetailsScreen extends StatelessWidget {
                   image: DecorationImage(
                     image: NetworkImage(plant.picture),
                     fit: BoxFit.cover,
+                    onError: (_, __) => const Icon(Icons.error, size: 100),
                   ),
                 ),
+                child: plant.picture.isEmpty
+                    ? Center(child: Icon(Icons.image, size: 100, color: Colors.grey[400]))
+                    : null,
               ),
               const SizedBox(height: 30),
               Text(

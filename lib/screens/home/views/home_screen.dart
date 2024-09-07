@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,19 +8,23 @@ import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
+import 'package:plant_repository/plant_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
-import '../../auth/blocs/bloc/sign_in_bloc.dart';
-import 'createPlant.dart';
+import 'createPlant.dart'; // Make sure to import this
+
 class Homepage extends StatefulWidget {
   const Homepage({Key? key}) : super(key: key);
 
   @override
   _HomepageState createState() => _HomepageState();
 }
+
 class _HomepageState extends State<Homepage> {
   String _searchQuery = '';
   int _selectedIndex = 0; // Track the selected index for BottomNavyBar
   String? _userId;
+  MyUser _myUser = MyUser.empty; // Use empty MyUser instance by default
 
   @override
   void initState() {
@@ -26,11 +32,43 @@ class _HomepageState extends State<Homepage> {
     _fetchUserId();
   }
 
+  void _onProfileButtonPressed() {
+    if (_userId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserProfileScreen(userId: _userId!),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You need to sign in first.')),
+      );
+    }
+  }
+
   void _fetchUserId() async {
     final user = FirebaseAuth.instance.currentUser;
-    setState(() {
-      _userId = user?.uid;
-    });
+    if (user != null) {
+      setState(() {
+        _userId = user.uid;
+      });
+      _fetchMyUserData(user.uid); // Fetch MyUser data
+    }
+  }
+
+  void _fetchMyUserData(String uid) async {
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        final userEntity = MyUserEntity.fromDocument(userDoc.data() as Map<String, dynamic>);
+        setState(() {
+          _myUser = MyUser.fromEntity(userEntity);
+        });
+      }
+    } catch (e) {
+      log('Error fetching user data: $e');
+    }
   }
 
   void _updateSearchQuery(String query) {
@@ -54,16 +92,17 @@ class _HomepageState extends State<Homepage> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) =>const ChatPage() )
+          MaterialPageRoute(builder: (context) => const ChatPage()),
         );
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AddPlantScreen(userId: _userId!)),
-        );
+        if (_userId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddPlantScreen(userId: _userId!)),
+          );
+        }
         break;
-
     }
   }
 
@@ -88,25 +127,11 @@ class _HomepageState extends State<Homepage> {
           ),
           IconButton(
             icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
-            onPressed: () {
-              if (_userId != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserProfileScreen(userId: _userId!),
-                  ),
-                );
-              } else {
-                // Handle case where user is not logged in
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('User is not logged in')),
-                );
-              }
-            },
+            onPressed: _onProfileButtonPressed,
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(50),
+          preferredSize: const Size.fromHeight(50),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(
@@ -169,7 +194,10 @@ class _HomepageState extends State<Homepage> {
             return const Center(child: Text('No plants found.'));
           }
 
-          return CarouselPanel(plantDocuments: plants);
+          return CarouselPanel(
+            plantDocuments: plants,
+            currentUser: _myUser, // Pass the MyUser instance
+          );
         },
       ),
     );

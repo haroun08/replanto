@@ -13,4 +13,7 @@ abstract class UserRepository {
 
   Future<void> logOut();
 
-}
+  Future<void> addPlantToUser(String userId, Plant plant);
+
+  Future<void> deletePlantFromUser(String userId, String plantId) ;
+  }

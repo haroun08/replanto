@@ -44,6 +44,7 @@ dependencies:
   firebase_auth: ^5.1.4
   dash_chat_2: ^0.0.21
   google_generative_ai: ^0.4.6
+  file_picker: ^8.0.7
 
   user_repository:
     path: packages/user_repository
@@ -56,11 +57,11 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   intl: ^0.19.0
   image_picker: ^1.1.2
-  flutter_dotenv: ^5.1.0
   firebase_storage: ^12.2.0
   firebase_app_check: ^0.3.0+5
-  chat_gpt_sdk: ^3.1.0
   flutter_markdown: ^0.7.3+1
+  flutter_staggered_grid_view: ^0.7.0
+  fluttertoast: ^8.2.8
 
 flutter_launcher_icons:
   android: "launcher_icon"

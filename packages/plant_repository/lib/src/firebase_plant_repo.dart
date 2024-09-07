@@ -6,8 +6,8 @@ import 'package:plant_repository/plant_repository.dart';
 
 class FirebasePlantRepo implements PlantRepo {
   final FirebaseAuth _firebaseAuth;
-  final plantsCollection = FirebaseFirestore.instance.collection('plants');
-  final usersCollection = FirebaseFirestore.instance.collection('users');
+  final CollectionReference plantsCollection = FirebaseFirestore.instance.collection('plants');
+  final CollectionReference usersCollection = FirebaseFirestore.instance.collection('users');
 
   FirebasePlantRepo({
     FirebaseAuth? firebaseAuth,
@@ -26,15 +26,24 @@ class FirebasePlantRepo implements PlantRepo {
       await usersCollection.doc(user.uid).update({
         'plants': FieldValue.arrayUnion([plant.plantId]),
       });
+
+      log('Plant added successfully');
     } catch (e) {
       log('Failed to add plant: $e');
       rethrow;
     }
   }
 
-
-
-
+  @override
+  Future<void> updatePlant(String plantId, Map<String, dynamic> updatedFields) async {
+    try {
+      await plantsCollection.doc(plantId).update(updatedFields);
+      log('Plant updated successfully');
+    } catch (e) {
+      log('Error updating plant: $e');
+      throw Exception('Error updating plant: $e');
+    }
+  }
 
   @override
   Future<List<Plant>> getPlants() async {
@@ -49,12 +58,38 @@ class FirebasePlantRepo implements PlantRepo {
           .get();
 
       return querySnapshot.docs.map((doc) {
-        final plantEntity = PlantEntity.fromDocument(doc.data());
+        final plantEntity = PlantEntity.fromDocument(doc.data() as Map<String, dynamic>);
         return Plant.fromEntity(plantEntity);
       }).toList();
     } catch (e) {
       log('Failed to fetch plants: $e');
       return [];
+    }
+  }
+
+  @override
+  Future<void> deletePlant(String plantId) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      final plantDoc = await plantsCollection.doc(plantId).get();
+      if (plantDoc.exists && plantDoc['userId'] == user.uid) {
+        await plantsCollection.doc(plantId).delete();
+
+        await usersCollection.doc(user.uid).update({
+          'plants': FieldValue.arrayRemove([plantId]),
+        });
+
+        log('Plant deleted successfully');
+      } else {
+        throw Exception('User is not authorized to delete this plant');
+      }
+    } catch (e) {
+      log('Failed to delete plant: $e');
+      rethrow;
     }
   }
 }
