@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 class AddPlantScreen extends StatefulWidget {
   final String userId;
 
-  const AddPlantScreen({Key? key, required this.userId}) : super(key: key);
+  const AddPlantScreen({super.key, required this.userId});
 
   @override
   _AddPlantScreenState createState() => _AddPlantScreenState();
@@ -206,29 +206,39 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         return;
       }
 
-      final plant = {
-        'name': _nameController.text,
-        'picture': imageUrl,
-        'description': _descriptionController.text,
-        'humidity': int.tryParse(_humidityController.text) ?? 0,
-        'pHLevel': int.tryParse(_pHLevelController.text) ?? 0,
-        'sunExposure': int.tryParse(_sunExposureController.text) ?? 0,
-        'temperature': int.tryParse(_temperatureController.text) ?? 0,
-        'soilMoisture': int.tryParse(_soilMoistureController.text) ?? 0,
-        'healthy': int.tryParse(_healthyController.text) ?? 0,
-        'userId': widget.userId,
-      };
-
       try {
-        final docRef = await FirebaseFirestore.instance.collection('plants').add(plant);
-        log('Plant document added with ID: ${docRef.id}');
+        // Add plant to Firestore and get the document ID (plantId)
+        final plantData = {
+          'name': _nameController.text,
+          'picture': imageUrl,
+          'description': _descriptionController.text,
+          'humidity': int.tryParse(_humidityController.text) ?? 0,
+          'pHLevel': int.tryParse(_pHLevelController.text) ?? 0,
+          'sunExposure': int.tryParse(_sunExposureController.text) ?? 0,
+          'temperature': int.tryParse(_temperatureController.text) ?? 0,
+          'soilMoisture': int.tryParse(_soilMoistureController.text) ?? 0,
+          'healthy': int.tryParse(_healthyController.text) ?? 0,
+          'userId': widget.userId,
+        };
 
+        final docRef = await FirebaseFirestore.instance.collection('plants').add(plantData);
+        final plantId = docRef.id;
+        log('Plant document added with ID: $plantId');
+
+        // Include plantId in the plant data
+        final userPlantData = {
+          'plantId': plantId,
+          ...plantData,  // Include all the original plant fields
+        };
+
+        // Update the user's document to add the full plant object with plantId
         final userId = widget.userId;
         await FirebaseFirestore.instance.collection('users').doc(userId).update({
-          'plants': FieldValue.arrayUnion([plant]), // Pass the full plant object
+          'plants': FieldValue.arrayUnion([userPlantData]), // Add plantId with details
         });
-        log('Updated user document for userId: $userId with new plant details');
+        log('Updated user document for userId: $userId with new plantId: $plantId');
 
+        // Navigate back and show success message
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Plant added successfully!')),
@@ -241,4 +251,5 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       }
     }
   }
+
 }

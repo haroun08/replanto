@@ -15,14 +15,14 @@ class ModifyProfilePage extends StatefulWidget {
   final FirebasePlantRepo plantRepo;  // Add plantRepo here
 
   const ModifyProfilePage({
-    Key? key,
+    super.key,
     required this.userId,
     required this.currentName,
     required this.currentAge,
     required this.currentPicture,
     required this.userRepository,
     required this.plantRepo,  // Make plantRepo required
-  }) : super(key: key);
+  });
 
   @override
   _ModifyProfilePageState createState() => _ModifyProfilePageState();

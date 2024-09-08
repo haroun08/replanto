@@ -40,11 +40,10 @@ class FirebaseUserRepo implements UserRepository {
     });
   }
 
-
   @override
   Future<void> updateProfileData(String userId, Map<String, dynamic> updatedData) async {
     try {
-      await _firestore.collection('users').doc(userId).update(updatedData);
+      await usersCollection.doc(userId).update(updatedData as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to update profile: $e');
     }
@@ -96,7 +95,6 @@ class FirebaseUserRepo implements UserRepository {
   @override
   Future<void> addPlantToUser(String userId, Plant plant) async {
     try {
-      // Ensure plant belongs to the user
       if (plant.userId != userId) {
         throw Exception('The plant does not belong to the user.');
       }
@@ -110,16 +108,49 @@ class FirebaseUserRepo implements UserRepository {
 
   @override
   Future<void> deletePlantFromUser(String userId, String plantId) async {
+    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
     try {
-      final plantDoc = await _plantRepo.plantsCollection.doc(plantId).get();
-      if (plantDoc.exists && plantDoc['userId'] == userId) {
-        await _plantRepo.deletePlant(plantId);
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final userSnapshot = await transaction.get(userRef);
+
+        if (!userSnapshot.exists) {
+          throw Exception("User not found");
+        }
+
+        final userData = userSnapshot.data();
+        List<dynamic> plantIds = List.from(userData?['plants'] ?? []);
+
+        if (plantIds.contains(plantId)) {
+          plantIds.remove(plantId);
+          transaction.update(userRef, {'plants': plantIds});
+        }
+      });
+    } catch (e) {
+      print("Error deleting plant from user: $e");
+      throw Exception("Failed to delete plant from user");
+    }
+  }
+
+
+  @override
+  Future<void> deleteUserAndPlants(String userId) async {
+    try {
+      final userDoc = usersCollection.doc(userId);
+      final userSnapshot = await userDoc.get();
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.data() as Map<String, dynamic>;
+        final List<dynamic> plantIds = userData['plants'] ?? [];
+        for (final plantId in plantIds) {
+          await _plantRepo.deletePlant(plantId);
+        }
+        await userDoc.delete();
       } else {
-        throw Exception('The plant does not belong to the user or does not exist.');
+        throw Exception('User not found');
       }
     } catch (e) {
-      log('Failed to delete plant from user: $e');
-      rethrow;
+      log('Error deleting user and plants: $e');
+      throw Exception('Failed to delete user and plants: $e');
     }
   }
 }

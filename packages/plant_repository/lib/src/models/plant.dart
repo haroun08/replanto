@@ -1,18 +1,17 @@
 import '../entities/plant_entity.dart';
 
 class Plant {
-  String plantId;
-  String picture;
-  String name;
-  String description;
-  int humidity;
-  int pHLevel;
-  int sunExposure;
-  int temperature;
-  int soilMoisture;
-  int healthy;
-  String userId;
-
+  final String plantId;
+  final String picture;
+  final String name;
+  final String description;
+  final int humidity;
+  final int pHLevel;
+  final int sunExposure;
+  final int temperature;
+  final int soilMoisture;
+  final int healthy;
+  final String userId;
 
   Plant({
     required this.plantId,
@@ -67,8 +66,8 @@ class Plant {
       sunExposure: sunExposure,
       temperature: temperature,
       soilMoisture: soilMoisture,
-      healthy :healthy,
-      userId : userId,
+      healthy: healthy,
+      userId: userId,
     );
   }
 
@@ -87,4 +86,22 @@ class Plant {
       userId: entity.userId,
     );
   }
+
+  factory Plant.fromMap(Map<String, dynamic> map) {
+    return Plant(
+      plantId: map['plantId'] as String,
+      picture: map['picture'] as String,
+      name: map['name'] as String,
+      description: map['description'] as String,
+      humidity: map['humidity'] as int,
+      pHLevel: map['pHLevel'] as int,
+      sunExposure: map['sunExposure'] as int,
+      temperature: map['temperature'] as int,
+      soilMoisture: map['soilMoisture'] as int,
+      healthy: map['healthy'] as int,
+      userId: map['userId'] as String,
+    );
+  }
+
+
 }

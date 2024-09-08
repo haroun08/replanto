@@ -19,4 +19,5 @@ abstract class UserRepository {
 
   Future<void> updateProfileData(String userId, Map<String, dynamic> newUserData);
 
+  Future<void> deleteUserAndPlants(String userId);
 }

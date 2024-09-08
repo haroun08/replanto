@@ -5,4 +5,5 @@ abstract class PlantRepo {
   Future<void> addPlant(Plant plant);
   Future<void> deletePlant(String plantId);
   Future<void> updatePlant(String plantId, Map<String, dynamic> updatedFields);
+  Future<Plant> getPlantById(String plantId);
 }

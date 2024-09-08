@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:plant_repository/plant_repository.dart';
+import 'package:replanto/screens/home/views/widgets/plant_screen.dart';
 import 'package:user_repository/user_repository.dart';
-import 'EditPlantPage.dart';
 import 'ModifyProfilePage.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -13,6 +13,7 @@ class UserProfileScreen extends StatelessWidget {
   UserProfileScreen({super.key, required this.userId});
 
   final FirebasePlantRepo plantRepo = FirebasePlantRepo();
+  final FirebaseUserRepo userRepo = FirebaseUserRepo(plantRepo: FirebasePlantRepo());
 
   Future<MyUser> _fetchUserDetails(String userId) async {
     try {
@@ -30,13 +31,10 @@ class UserProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _deletePlant(String plantId) async {
+  Future<void> _deletePlant(String userId, String plantId) async {
     try {
-      if (plantId.isEmpty) {
-        Fluttertoast.showToast(msg: 'Invalid plant ID');
-        return;
-      }
-      await plantRepo.deletePlant(plantId);
+      await userRepo.deletePlantFromUser(userId, plantId);
+      await plantRepo.deletePlant(plantId); // Ensure this method exists in your plant repository
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
       print('Error deleting plant: $e');
@@ -77,7 +75,6 @@ class UserProfileScreen extends StatelessWidget {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,8 +88,8 @@ class UserProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: FutureBuilder<MyUser>(
-        future: _fetchUserDetails(userId),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -102,11 +99,13 @@ class UserProfileScreen extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          if (!snapshot.hasData) {
+          if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Center(child: Text('No user data found.'));
           }
 
-          final user = snapshot.data!;
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final userEntity = MyUserEntity.fromDocument(data);
+          final user = MyUser.fromEntity(userEntity);
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -159,109 +158,11 @@ class UserProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: user.plants.length,
-                    itemBuilder: (context, index) {
-                      final plant = user.plants[index];
-
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                ),
-                                child: Image.network(
-                                  plant.picture ?? 'https://example.com/default-plant-picture.jpg',
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                plant.name ?? 'Unnamed plant',
-                                style: Theme.of(context).textTheme.titleMedium,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Text(
-                                plant.description ?? 'No description',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EditPlantPage(
-                                          plant: plant,
-                                          plantRepo: plantRepo,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () async {
-                                    bool? confirmDelete = await showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Delete Plant'),
-                                        content: const Text('Are you sure you want to delete this plant?'),
-                                        actions: [
-                                          TextButton(
-                                            child: const Text('Cancel'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop(false);
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: const Text('Delete'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop(true);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirmDelete == true) {
-                                      await _deletePlant(plant.plantId);
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  child: UserPlantsGrid(
+                    plants: user.plants,
+                    userId: user.userId,
+                    plantRepo: plantRepo,
+                    onDeletePlant: _deletePlant,
                   ),
                 ),
               ],
@@ -271,4 +172,6 @@ class UserProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }

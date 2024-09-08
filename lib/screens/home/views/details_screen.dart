@@ -83,7 +83,9 @@ class DetailsScreen extends StatelessWidget {
                     builder: (context) => EditPlantPage(
                       plant: plant,
                       plantRepo: plantRepo,
-                    ),
+                      userId: user.userId, // Pass the userId
+
+                    )
                   ),
                 );
               },

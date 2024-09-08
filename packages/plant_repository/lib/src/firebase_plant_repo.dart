@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_repository/plant_repository.dart';
@@ -70,23 +69,21 @@ class FirebasePlantRepo implements PlantRepo {
   @override
   Future<void> deletePlant(String plantId) async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) {
-        throw Exception('No user is currently logged in');
-      }
-
-      final plantDoc = await plantsCollection.doc(plantId).get();
-      if (plantDoc.exists && plantDoc['userId'] == user.uid) {
-        await _deletePlantFromUser(user.uid, plantId);
-        await plantsCollection.doc(plantId).delete();
-
-        log('Plant deleted successfully');
+      final plantDoc = plantsCollection.doc(plantId);
+      final plantSnapshot = await plantDoc.get();
+      if (plantSnapshot.exists) {
+        final plantData = plantSnapshot.data() as Map<String, dynamic>;
+        final userId = plantData['userId'];
+        await plantDoc.delete();
+        if (userId != null) {
+          await _deletePlantFromUser(userId, plantId);
+        }
       } else {
-        throw Exception('User is not authorized to delete this plant');
+        throw Exception('Plant not found');
       }
     } catch (e) {
-      log('Failed to delete plant: $e');
-      rethrow;
+      log('Error deleting plant: $e');
+      throw Exception('Failed to delete plant: $e');
     }
   }
 
@@ -100,4 +97,23 @@ class FirebasePlantRepo implements PlantRepo {
       rethrow;
     }
   }
+
+  @override
+  Future<Plant> getPlantById(String plantId) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('plants').doc(plantId).get();
+      if (doc.exists && doc.data() != null) {
+        final plantData = doc.data()!;
+        final plantEntity = PlantEntity.fromDocument(plantData);
+        return Plant.fromEntity(plantEntity);
+      } else {
+        throw Exception('Plant not found');
+      }
+    } catch (e) {
+      print('Error fetching plant: $e');
+      throw Exception('Failed to fetch plant details');
+    }
+  }
+
+
 }

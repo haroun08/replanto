@@ -9,12 +9,15 @@ import 'package:plant_repository/plant_repository.dart';
 class EditPlantPage extends StatefulWidget {
   final Plant plant;
   final FirebasePlantRepo plantRepo;
+  final String userId; // Add userId
 
   const EditPlantPage({
     super.key,
     required this.plant,
     required this.plantRepo,  // Make plantRepo required
+    required this.userId, // Add userId
   });
+
   @override
   _EditPlantPageState createState() => _EditPlantPageState();
 }
@@ -106,7 +109,12 @@ class _EditPlantPageState extends State<EditPlantPage> {
     };
 
     try {
+      // Update the plant in Firestore
       await FirebaseFirestore.instance.collection('plants').doc(plantId).update(updatedPlant);
+
+      // Update the user's plant list
+      await _updateUserPlantList(plantId, updatedPlant);
+
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Plant updated successfully!')),
@@ -114,6 +122,37 @@ class _EditPlantPageState extends State<EditPlantPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update plant: $e')),
+      );
+    }
+  }
+
+  Future<void> _updateUserPlantList(String plantId, Map<String, dynamic> updatedPlant) async {
+    try {
+      // Fetch the user document
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data()!;
+        final List<dynamic> plants = userData['plants'] ?? [];
+
+        // Find and update the plant in the user's list
+        final updatedPlants = plants.map((plant) {
+          if (plant['plantId'] == plantId) {
+            return updatedPlant;
+          }
+          return plant;
+        }).toList();
+
+        // Update the user's plant list in Firestore
+        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+          'plants': updatedPlants,
+        });
+      } else {
+        throw Exception('User not found');
+      }
+    } catch (e) {
+      log('Error updating user plant list: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update user plant list: $e')),
       );
     }
   }
