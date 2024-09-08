@@ -8,9 +8,13 @@ import 'package:plant_repository/plant_repository.dart';
 
 class EditPlantPage extends StatefulWidget {
   final Plant plant;
+  final FirebasePlantRepo plantRepo;
 
-  const EditPlantPage({required this.plant, Key? key}) : super(key: key);
-
+  const EditPlantPage({
+    super.key,
+    required this.plant,
+    required this.plantRepo,  // Make plantRepo required
+  });
   @override
   _EditPlantPageState createState() => _EditPlantPageState();
 }

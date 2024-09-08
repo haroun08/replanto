@@ -11,9 +11,16 @@ import 'package:user_repository/user_repository.dart';
 class DetailsScreen extends StatelessWidget {
   final Plant plant;
   final MyUser user;
-  final FirebasePlantRepo plantRepo = FirebasePlantRepo();
+  final FirebasePlantRepo plantRepo;
+  final FirebaseUserRepo userRepository;
 
-  DetailsScreen({required this.plant, required this.user, super.key});
+  DetailsScreen({
+    required this.plant,
+    required this.user,
+    required this.plantRepo,
+    required this.userRepository,
+    super.key,
+  });
 
   Future<void> _deletePlant(BuildContext context) async {
     try {
@@ -24,10 +31,11 @@ class DetailsScreen extends StatelessWidget {
       Navigator.pop(context);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete plant: $error')),
+        SnackBar(content: Text('Failed to delete plant: ${error.toString()}')),
       );
     }
   }
+
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -67,12 +75,15 @@ class DetailsScreen extends StatelessWidget {
         actions: [
           if (plant.userId == userId) ...[
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.green),
+              icon: const Icon(Icons.edit, color: Colors.blue),
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditPlantPage(plant: plant),
+                    builder: (context) => EditPlantPage(
+                      plant: plant,
+                      plantRepo: plantRepo,
+                    ),
                   ),
                 );
               },
@@ -90,9 +101,11 @@ class DetailsScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => ModifyProfilePage(
                     userId: user.userId,
-                    currentName: user.name ?? 'Unknown',
-                    currentAge: user.age ?? 0,
-                    currentPicture: user.picture ?? '',
+                    currentName: user.name,
+                    currentAge: user.age,
+                    currentPicture: user.picture,
+                    userRepository: userRepository,
+                    plantRepo: plantRepo,
                   ),
                 ),
               );
@@ -120,11 +133,13 @@ class DetailsScreen extends StatelessWidget {
                       blurRadius: 5,
                     ),
                   ],
-                  image: DecorationImage(
+                  image: plant.picture.isNotEmpty
+                      ? DecorationImage(
                     image: NetworkImage(plant.picture),
                     fit: BoxFit.cover,
                     onError: (_, __) => const Icon(Icons.error, size: 100),
-                  ),
+                  )
+                      : null,
                 ),
                 child: plant.picture.isEmpty
                     ? Center(child: Icon(Icons.image, size: 100, color: Colors.grey[400]))

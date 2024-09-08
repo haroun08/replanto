@@ -12,6 +12,7 @@ class FirebaseUserRepo implements UserRepository {
   final FirebaseAuth _firebaseAuth;
   final CollectionReference usersCollection = FirebaseFirestore.instance.collection('users');
   final FirebasePlantRepo _plantRepo;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   FirebaseUserRepo({
     FirebaseAuth? firebaseAuth,
@@ -37,6 +38,16 @@ class FirebaseUserRepo implements UserRepository {
         });
       }
     });
+  }
+
+
+  @override
+  Future<void> updateProfileData(String userId, Map<String, dynamic> updatedData) async {
+    try {
+      await _firestore.collection('users').doc(userId).update(updatedData);
+    } catch (e) {
+      throw Exception('Failed to update profile: $e');
+    }
   }
 
   @override
@@ -82,6 +93,7 @@ class FirebaseUserRepo implements UserRepository {
     }
   }
 
+  @override
   Future<void> addPlantToUser(String userId, Plant plant) async {
     try {
       // Ensure plant belongs to the user
@@ -96,6 +108,7 @@ class FirebaseUserRepo implements UserRepository {
     }
   }
 
+  @override
   Future<void> deletePlantFromUser(String userId, String plantId) async {
     try {
       final plantDoc = await _plantRepo.plantsCollection.doc(plantId).get();

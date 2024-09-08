@@ -77,11 +77,8 @@ class FirebasePlantRepo implements PlantRepo {
 
       final plantDoc = await plantsCollection.doc(plantId).get();
       if (plantDoc.exists && plantDoc['userId'] == user.uid) {
+        await _deletePlantFromUser(user.uid, plantId);
         await plantsCollection.doc(plantId).delete();
-
-        await usersCollection.doc(user.uid).update({
-          'plants': FieldValue.arrayRemove([plantId]),
-        });
 
         log('Plant deleted successfully');
       } else {
@@ -89,6 +86,17 @@ class FirebasePlantRepo implements PlantRepo {
       }
     } catch (e) {
       log('Failed to delete plant: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _deletePlantFromUser(String userId, String plantId) async {
+    try {
+      await usersCollection.doc(userId).update({
+        'plants': FieldValue.arrayRemove([plantId]),
+      });
+    } catch (e) {
+      log('Failed to remove plant from user: $e');
       rethrow;
     }
   }

@@ -16,4 +16,7 @@ abstract class UserRepository {
   Future<void> addPlantToUser(String userId, Plant plant);
 
   Future<void> deletePlantFromUser(String userId, String plantId) ;
-  }
+
+  Future<void> updateProfileData(String userId, Map<String, dynamic> newUserData);
+
+}

@@ -8,13 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
-import 'package:plant_repository/plant_repository.dart';
 import 'package:user_repository/user_repository.dart';
+import 'package:plant_repository/plant_repository.dart'; // Ensure this import is correct
 
-import 'createPlant.dart'; // Make sure to import this
+import 'createPlant.dart';
 
 class Homepage extends StatefulWidget {
-  const Homepage({Key? key}) : super(key: key);
+  const Homepage({super.key});
 
   @override
   _HomepageState createState() => _HomepageState();
@@ -22,13 +22,17 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   String _searchQuery = '';
-  int _selectedIndex = 0; // Track the selected index for BottomNavyBar
+  int _selectedIndex = 0;
   String? _userId;
-  MyUser _myUser = MyUser.empty; // Use empty MyUser instance by default
+  MyUser _myUser = MyUser.empty;
+
+  final FirebasePlantRepo plantRepo = FirebasePlantRepo(); // Initialize your plant repository
+  late FirebaseUserRepo userRepo; // Declare but don't initialize yet
 
   @override
   void initState() {
     super.initState();
+    userRepo = FirebaseUserRepo(plantRepo: plantRepo); // Initialize in initState
     _fetchUserId();
   }
 
@@ -37,7 +41,7 @@ class _HomepageState extends State<Homepage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserProfileScreen(userId: _userId!),
+          builder: (context) => UserProfileScreen(userId: _userId!,),
         ),
       );
     } else {
@@ -65,9 +69,16 @@ class _HomepageState extends State<Homepage> {
         setState(() {
           _myUser = MyUser.fromEntity(userEntity);
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User data not found.')),
+        );
       }
     } catch (e) {
       log('Error fetching user data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching user data.')),
+      );
     }
   }
 
@@ -165,8 +176,8 @@ class _HomepageState extends State<Homepage> {
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
-            icon: Icon(CupertinoIcons.add_circled_solid, size: 30),
-            title: Text('Add Plant'),
+            icon: const Icon(CupertinoIcons.add_circled_solid, size: 30),
+            title: const Text('Add Plant'),
             activeColor: Colors.green,
           ),
         ],
@@ -196,7 +207,9 @@ class _HomepageState extends State<Homepage> {
 
           return CarouselPanel(
             plantDocuments: plants,
-            currentUser: _myUser, // Pass the MyUser instance
+            currentUser: _myUser,
+            plantRepo: plantRepo,
+            userRepo: userRepo,
           );
         },
       ),

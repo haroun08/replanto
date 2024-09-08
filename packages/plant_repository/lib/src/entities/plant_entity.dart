@@ -1,5 +1,4 @@
 class PlantEntity {
-  // Fields
   String plantId;
   String picture;
   String name;
@@ -12,7 +11,6 @@ class PlantEntity {
   int healthy;
   String userId;
 
-  // Constructor
   PlantEntity({
     required this.plantId,
     required this.picture,
