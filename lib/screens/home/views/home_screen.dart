@@ -143,9 +143,8 @@ class _HomepageState extends State<Homepage> {
           ),
           _myUser.picture.isNotEmpty
               ? CircleAvatar(
-            radius: 13,
-            backgroundImage: NetworkImage(_myUser.picture),
-
+            radius: 15,
+            backgroundImage: NetworkImage(_myUser.picture, scale: 2),
           )
               : IconButton(
             icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),

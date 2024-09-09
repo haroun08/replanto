@@ -119,7 +119,7 @@ class FirebaseUserRepo implements UserRepository {
         }
 
         final userData = userSnapshot.data();
-        List<dynamic> plantIds = List.from(userData?['plants'] ?? []);
+        List<String> plantIds = List<String>.from(userData?['plants'] ?? []);
 
         if (plantIds.contains(plantId)) {
           plantIds.remove(plantId);
@@ -131,6 +131,8 @@ class FirebaseUserRepo implements UserRepository {
       throw Exception("Failed to delete plant from user");
     }
   }
+
+
 
 
   @override

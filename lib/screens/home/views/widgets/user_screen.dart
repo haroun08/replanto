@@ -34,16 +34,35 @@ class UserProfileScreen extends StatelessWidget {
 
   Future<void> _deletePlant(String userId, String plantId) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'plants': FieldValue.arrayRemove([plantId]), // Use arrayRemove to remove the plantId
-      });
+      await plantRepo.deletePlant(plantId);
 
-      await plantRepo.deletePlant(plantId); // Ensure that the plantRepo has the deletePlant method
+      // Update user documents to remove plant reference
+      final usersCollection = FirebaseFirestore.instance.collection('users');
+      final userDocs = await usersCollection.where('plants', arrayContains: plantId).get();
 
-      Fluttertoast.showToast(msg: 'Plant deleted successfully');
+      for (var doc in userDocs.docs) {
+        await doc.reference.update({
+          'plants': FieldValue.arrayRemove([plantId]),
+        });
+      }
+
+      print('Plant deleted successfully from both collection and user list');
     } catch (e) {
       print('Error deleting plant: $e');
-      Fluttertoast.showToast(msg: 'Failed to delete plant');
+
+      // If deletion fails or plant is not found, clean up references in user documents
+      if (e.toString().contains('Plant not found')) {
+        final usersCollection = FirebaseFirestore.instance.collection('users');
+        final userDocs = await usersCollection.where('plants', arrayContains: plantId).get();
+
+        for (var doc in userDocs.docs) {
+          await doc.reference.update({
+            'plants': FieldValue.arrayRemove([plantId]),
+          });
+        }
+
+        print('Removed plant reference from user documents');
+      }
     }
   }
 

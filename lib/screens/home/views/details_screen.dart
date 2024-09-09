@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:plant_repository/plant_repository.dart';
+import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/EditPlantPage.dart';
 import 'package:replanto/screens/home/views/widgets/ModifyProfilePage.dart';
 import 'package:replanto/screens/home/views/widgets/UserPost.dart';
@@ -35,7 +36,6 @@ class DetailsScreen extends StatelessWidget {
       );
     }
   }
-
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -80,12 +80,11 @@ class DetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditPlantPage(
-                      plant: plant,
-                      plantRepo: plantRepo,
-                      userId: user.userId, // Pass the userId
-
-                    )
+                      builder: (context) => EditPlantPage(
+                        plant: plant,
+                        plantRepo: plantRepo,
+                        userId: user.userId,
+                      )
                   ),
                 );
               },
@@ -95,83 +94,86 @@ class DetailsScreen extends StatelessWidget {
               onPressed: () => _showDeleteDialog(context),
             ),
           ],
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.green),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ModifyProfilePage(
-                    userId: user.userId,
-                    currentName: user.name,
-                    currentAge: user.age,
-                    currentPicture: user.picture,
-                    userRepository: userRepository,
-                    plantRepo: plantRepo,
-                  ),
-                ),
-              );
-            },
-          ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Plant Image
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width - 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.grey,
-                      offset: Offset(3, 3),
-                      blurRadius: 5,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Plant Image
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.width - 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.grey,
+                          offset: Offset(3, 3),
+                          blurRadius: 5,
+                        ),
+                      ],
+                      image: plant.picture.isNotEmpty
+                          ? DecorationImage(
+                        image: NetworkImage(plant.picture),
+                        fit: BoxFit.cover,
+                        onError: (_, __) => const Icon(Icons.error, size: 100),
+                      )
+                          : null,
                     ),
-                  ],
-                  image: plant.picture.isNotEmpty
-                      ? DecorationImage(
-                    image: NetworkImage(plant.picture),
-                    fit: BoxFit.cover,
-                    onError: (_, __) => const Icon(Icons.error, size: 100),
-                  )
-                      : null,
-                ),
-                child: plant.picture.isEmpty
-                    ? Center(child: Icon(Icons.image, size: 100, color: Colors.grey[400]))
-                    : null,
+                    child: plant.picture.isEmpty
+                        ? Center(child: Icon(Icons.image, size: 100, color: Colors.grey[400]))
+                        : null,
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    plant.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    plant.description,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  UserInfoSection(userId: plant.userId ?? 'Unknown User ID'),
+                  const SizedBox(height: 20),
+                  _buildPlantAttributes(context, plant),
+                  const SizedBox(height: 20),
+                  FeedbackSection(plantId: plant.plantId),
+                ],
               ),
-              const SizedBox(height: 30),
-              Text(
-                plant.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                plant.description,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 20),
-              UserInfoSection(userId: plant.userId ?? 'Unknown User ID'),
-              const SizedBox(height: 20),
-              _buildPlantAttributes(context, plant),
-              const SizedBox(height: 20),
-              FeedbackSection(plantId: plant.plantId),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChatPage(), // Ensure you have a ChatPage widget
+                  ),
+                );
+              }, // Add your asset image
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Image.asset('assets/replanto-bot.png'),
+            ),
+          ),
+        ],
       ),
     );
   }
