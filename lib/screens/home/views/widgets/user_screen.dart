@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:plant_repository/plant_repository.dart';
 import 'package:replanto/screens/home/views/widgets/plant_screen.dart';
 import 'package:user_repository/user_repository.dart';
+import '../details_screen.dart';
 import 'ModifyProfilePage.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -34,17 +35,14 @@ class UserProfileScreen extends StatelessWidget {
   Future<void> _deletePlant(String userId, String plantId) async {
     try {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'plants': FieldValue.arrayUnion([plantId]),
+        'plants': FieldValue.arrayRemove([plantId]), // Use arrayRemove to remove the plantId
       });
 
-      await userRepo.deletePlantFromUser(userId, plantId);
+      await plantRepo.deletePlant(plantId); // Ensure that the plantRepo has the deletePlant method
 
-      await plantRepo.deletePlant(plantId);
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
       print('Error deleting plant: $e');
-      await userRepo.deletePlantFromUser(userId, plantId);
-
       Fluttertoast.showToast(msg: 'Failed to delete plant');
     }
   }
@@ -59,31 +57,26 @@ class UserProfileScreen extends StatelessWidget {
     }
   }
 
-  void _onProfileButtonPressed(BuildContext context) async {
-    try {
-      final user = await _fetchUserDetails(userId); // Fetch user details
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ModifyProfilePage(
-            userId: userId,
-            currentName: user.name, // Pass the current user's name
-            currentAge: user.age,   // Pass the current user's age (make sure it's an int)
-            currentPicture: user.picture, // Pass the current user's picture
-            userRepository: FirebaseUserRepo(plantRepo: plantRepo),
-            plantRepo: plantRepo,
-          ),
+  void _onProfileButtonPressed(BuildContext context, MyUser user) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ModifyProfilePage(
+          userId: userId,
+          currentName: user.name,
+          currentAge: user.age,
+          currentPicture: user.picture,
+          userRepository: FirebaseUserRepo(plantRepo: plantRepo),
+          plantRepo: plantRepo,
         ),
-      );
-    } catch (e) {
-      print('Error fetching user details: $e');
-      Fluttertoast.showToast(msg: 'Failed to fetch user details');
-    }
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('User Profile'),
@@ -129,7 +122,11 @@ class UserProfileScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         GestureDetector(
-                          onTap: () => _onProfileButtonPressed(context),
+                          onTap: () {
+                            if (currentUserId == userId) {
+                              _onProfileButtonPressed(context, user);
+                            }
+                          },
                           child: CircleAvatar(
                             backgroundImage: NetworkImage(user.picture),
                             radius: 50,
@@ -169,7 +166,23 @@ class UserProfileScreen extends StatelessWidget {
                     plants: user.plants,
                     userId: user.userId,
                     plantRepo: plantRepo,
-                    onDeletePlant: _deletePlant,
+                    onDeletePlant: (userId, plantId) async {
+                      await _deletePlant(userId, plantId);
+                    },
+                    onPlantSelected: (plant) {
+                      // Handle plant selection logic
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailsScreen(
+                            plant: plant,
+                            user: user,
+                            plantRepo: plantRepo,
+                            userRepository: userRepo,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -179,6 +192,4 @@ class UserProfileScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }

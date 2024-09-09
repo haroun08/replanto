@@ -2,39 +2,44 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:plant_repository/plant_repository.dart';
-
+import 'package:user_repository/user_repository.dart';
+import '../details_screen.dart';
 import 'EditPlantPage.dart';
 
-class UserPlantsGrid extends StatelessWidget {
+class UserPlantsGrid extends StatefulWidget {
   final List<Plant> plants;
   final String userId;
-  final Future<void> Function(String, String) onDeletePlant;
   final FirebasePlantRepo plantRepo;
-
+  final Function(String userId, String plantId) onDeletePlant;
+  final Function(Plant plant) onPlantSelected; // Callback for plant selection
 
   const UserPlantsGrid({
+    super.key,
     required this.plants,
     required this.userId,
     required this.plantRepo,
     required this.onDeletePlant,
-    Key? key,
-  }) : super(key: key);
+    required this.onPlantSelected,
+  });
 
+  @override
+  _UserPlantsGridState createState() => _UserPlantsGridState();
+}
+
+class _UserPlantsGridState extends State<UserPlantsGrid> {
   Future<void> _fetchAndDeletePlant(BuildContext context, String plantId) async {
     try {
-      // Attempt to fetch plant details before deletion
-      final plant = await plantRepo.getPlantById(plantId);
+      // Fetch plant details before deletion
+      final plant = await widget.plantRepo.getPlantById(plantId);
       print('Fetched plant ID: $plantId'); // Log the plant ID to the console
-      _removePlantFromUser(userId, plantId);
+      _removePlantFromUser(widget.userId, plantId);
+
       // Proceed to delete the plant
-      await onDeletePlant(userId, plantId);
+      await widget.onDeletePlant(widget.userId, plantId);
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
       print('Error fetching plant details: $e');
-
-      // If fetch fails, automatically remove plant from the user's plant list
-
-
+      // If fetch fails, remove plant from user list
       Fluttertoast.showToast(msg: 'Failed to fetch plant details, plant removed from user list');
     }
   }
@@ -50,7 +55,6 @@ class UserPlantsGrid extends StatelessWidget {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -60,107 +64,131 @@ class UserPlantsGrid extends StatelessWidget {
         mainAxisSpacing: 8.0,
         childAspectRatio: 0.8,
       ),
-      itemCount: plants.length,
+      itemCount: widget.plants.length,
       itemBuilder: (context, index) {
-        final plant = plants[index];
+        final plant = widget.plants[index];
 
-        return Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+        return GestureDetector(
+          onTap: () {
+            // Call the callback for plant selection
+            widget.onPlantSelected(plant);
+
+            // Navigate to DetailsScreen when a plant is selected
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailsScreen(
+                  plant: plant,
+                  user: MyUser(
+                    userId: widget.userId,
+                    email: '', // Provide appropriate value if necessary
+                    name: '',  // Provide appropriate value if necessary
+                    age: 0,    // Provide appropriate value if necessary
+                    picture: '', // Provide appropriate value if necessary
+                    plants: widget.plants, // Pass the list of plants
                   ),
-                  child: Image.network(
-                    plant.picture ?? 'https://example.com/default-plant-picture.jpg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
+                  plantRepo: widget.plantRepo,
+                  userRepository: FirebaseUserRepo(plantRepo: widget.plantRepo),
+                ),
+              ),
+            );
+          },
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      plant.picture ?? 'https://example.com/default-plant-picture.jpg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  plant.name ?? 'Unnamed plant',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    plant.name ?? 'Unnamed plant',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  plant.plantId ?? 'No description',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    plant.plantId ?? 'No description',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditPlantPage(
-                            plant: plant,
-                            plantRepo: plantRepo,
-                            userId: userId,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditPlantPage(
+                              plant: plant,
+                              plantRepo: widget.plantRepo,
+                              userId: widget.userId,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      bool? confirmDelete = await showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Delete Plant'),
-                          content: const Text('Are you sure you want to delete this plant?'),
-                          actions: [
-                            TextButton(
-                              child: const Text('Cancel'),
-                              onPressed: () {
-                                Navigator.of(context).pop(false);
-                              },
-                            ),
-                            TextButton(
-                              child: const Text('Delete'),
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
-                            ),
-                          ],
-                        ),
-                      );
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        bool? confirmDelete = await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Plant'),
+                            content: const Text('Are you sure you want to delete this plant?'),
+                            actions: [
+                              TextButton(
+                                child: const Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('Delete'),
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
 
-                      if (confirmDelete == true) {
-                        if (plant.plantId.isNotEmpty) {
-                          await _fetchAndDeletePlant(context, plant.plantId);
-
-                          // Refresh UI after deletion
-                          (context as Element).markNeedsBuild(); // Optionally use setState in StatefulWidget
-                        } else {
-                          Fluttertoast.showToast(msg: 'Invalid plant ID');
+                        if (confirmDelete == true) {
+                          if (plant.plantId.isNotEmpty) {
+                            await _fetchAndDeletePlant(context, plant.plantId);
+                            setState(() {}); // Refresh UI after deletion
+                          } else {
+                            Fluttertoast.showToast(msg: 'Invalid plant ID');
+                          }
                         }
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

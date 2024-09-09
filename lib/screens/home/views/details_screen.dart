@@ -14,7 +14,7 @@ class DetailsScreen extends StatelessWidget {
   final FirebasePlantRepo plantRepo;
   final FirebaseUserRepo userRepository;
 
-  DetailsScreen({
+  const DetailsScreen({
     required this.plant,
     required this.user,
     required this.plantRepo,

@@ -1,6 +1,6 @@
 import 'package:plant_repository/plant_repository.dart';
 
-import '../../user_repository.dart';  // Ensure this includes Plant and PlantEntity classes
+import '../../user_repository.dart';
 
 
 class MyUser {

@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,10 +6,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/Calender.dart';
-import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 import 'package:user_repository/user_repository.dart';
-import 'package:plant_repository/plant_repository.dart'; // Ensure this import is correct
+import 'package:plant_repository/plant_repository.dart';
 
 import 'createPlant.dart';
 
@@ -27,13 +25,13 @@ class _HomepageState extends State<Homepage> {
   String? _userId;
   MyUser _myUser = MyUser.empty;
 
-  final FirebasePlantRepo plantRepo = FirebasePlantRepo(); // Initialize your plant repository
-  late FirebaseUserRepo userRepo; // Declare but don't initialize yet
+  final FirebasePlantRepo plantRepo = FirebasePlantRepo();
+  late FirebaseUserRepo userRepo;
 
   @override
   void initState() {
     super.initState();
-    userRepo = FirebaseUserRepo(plantRepo: plantRepo); // Initialize in initState
+    userRepo = FirebaseUserRepo(plantRepo: plantRepo);
     _fetchUserId();
   }
 
@@ -58,7 +56,7 @@ class _HomepageState extends State<Homepage> {
       setState(() {
         _userId = user.uid;
       });
-      _fetchMyUserData(user.uid); // Fetch MyUser data
+      _fetchMyUserData(user.uid);
     }
   }
 
@@ -85,7 +83,7 @@ class _HomepageState extends State<Homepage> {
 
   void _updateSearchQuery(String query) {
     setState(() {
-      _searchQuery = query;
+      _searchQuery = query.toLowerCase();
     });
   }
 
@@ -115,10 +113,10 @@ class _HomepageState extends State<Homepage> {
           );
         }
         break;
-      case 3: // Calendar case
+      case 3:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CalendarReplanto()), // Navigate to calendar page
+          MaterialPageRoute(builder: (context) => const CalendarReplanto()),
         );
         break;
     }
@@ -138,12 +136,18 @@ class _HomepageState extends State<Homepage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.green),
+            icon: Icon(Icons.notifications, color: Theme.of(context).colorScheme.primary),
             onPressed: () {
               // Notification button action
             },
           ),
-          IconButton(
+          _myUser.picture.isNotEmpty
+              ? CircleAvatar(
+            radius: 13,
+            backgroundImage: NetworkImage(_myUser.picture),
+
+          )
+              : IconButton(
             icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
             onPressed: _onProfileButtonPressed,
           ),
@@ -154,11 +158,11 @@ class _HomepageState extends State<Homepage> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(
               onChanged: _updateSearchQuery,
-              decoration: const InputDecoration(
-                hintText: 'Find your plant...',
+              decoration: InputDecoration(
+                hintText: 'Find User...',
                 border: InputBorder.none,
                 filled: true,
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -173,59 +177,105 @@ class _HomepageState extends State<Homepage> {
         onItemSelected: _onItemSelected,
         items: [
           BottomNavyBarItem(
-            icon: Icon(CupertinoIcons.home),
-            title: Text('Home'),
+            icon: Icon(CupertinoIcons.home, color: Theme.of(context).colorScheme.primary),
+            title: Text('Home', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            activeColor: Theme.of(context).colorScheme.primary,
+          ),
+          BottomNavyBarItem(
+            icon: const Icon(CupertinoIcons.news_solid, color: Colors.green),
+            title: const Text('Community', style: TextStyle(color: Colors.green)),
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
-            icon: const Icon(CupertinoIcons.news_solid),
-            title: const Text('Community'),
+            icon: const Icon(CupertinoIcons.add_circled_solid, size: 30, color: Colors.green),
+            title: const Text('Add Plant', style: TextStyle(color: Colors.green)),
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
-            icon: const Icon(CupertinoIcons.add_circled_solid, size: 30),
-            title: const Text('Add Plant'),
-            activeColor: Colors.green,
-          ),
-          BottomNavyBarItem(
-            icon: const Icon(Icons.calendar_today),
-            title: const Text('Calendar'),
+            icon: const Icon(Icons.calendar_today, color: Colors.green),
+            title: const Text('Calendar', style: TextStyle(color: Colors.green)),
             activeColor: Colors.green,
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _searchQuery.isEmpty
-            ? FirebaseFirestore.instance.collection('plants').snapshots()
-            : FirebaseFirestore.instance
-            .collection('plants')
-            .where('name', isGreaterThanOrEqualTo: _searchQuery)
-            .where('name', isLessThan: '$_searchQuery\uf8ff')
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('Error loading plants.'));
+            return const Center(child: Text('Error loading users.'));
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final plants = snapshot.data?.docs;
+          final users = snapshot.data?.docs;
 
-          if (plants == null || plants.isEmpty) {
-            return const Center(child: Text('No plants found.'));
+          if (users == null || users.isEmpty) {
+            return const Center(child: Text('No users found.'));
           }
 
-          return CarouselPanel(
-            plantDocuments: plants,
-            currentUser: _myUser,
-            plantRepo: plantRepo,
-            userRepo: userRepo,
+          final filteredUsers = users.where((user) {
+            final userData = user.data() as Map<String, dynamic>;
+            final userName = userData['name']?.toLowerCase() ?? '';
+            return userName.contains(_searchQuery);
+          }).toList();
+
+          if (filteredUsers.isEmpty) {
+            return const Center(child: Text('No users found.'));
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16.0),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 3 / 2,
+            ),
+            itemCount: filteredUsers.length,
+            itemBuilder: (context, index) {
+              final userData = filteredUsers[index].data() as Map<String, dynamic>;
+              final userId = filteredUsers[index].id;
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserProfileScreen(userId: userId),
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(userData['picture'] ?? ''),
+                        radius: 30,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        userData['name'] ?? 'No name',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        userData['age'] != null ? 'Age: ${userData['age']}' : 'No age provided',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 }
-
