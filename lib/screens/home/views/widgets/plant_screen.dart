@@ -1,13 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:plant_repository/plant_repository.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:plant_repository/plant_repository.dart';
+
 import 'EditPlantPage.dart';
 
 class UserPlantsGrid extends StatelessWidget {
   final List<Plant> plants;
   final String userId;
+  final Future<void> Function(String, String) onDeletePlant;
   final FirebasePlantRepo plantRepo;
-  final Function(String, String) onDeletePlant;
+
 
   const UserPlantsGrid({
     required this.plants,
@@ -19,17 +22,34 @@ class UserPlantsGrid extends StatelessWidget {
 
   Future<void> _fetchAndDeletePlant(BuildContext context, String plantId) async {
     try {
-      // Fetch plant details before deletion
+      // Attempt to fetch plant details before deletion
       final plant = await plantRepo.getPlantById(plantId);
       print('Fetched plant ID: $plantId'); // Log the plant ID to the console
-
+      _removePlantFromUser(userId, plantId);
       // Proceed to delete the plant
       await onDeletePlant(userId, plantId);
+      Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
       print('Error fetching plant details: $e');
-      Fluttertoast.showToast(msg: 'Failed to fetch plant details');
+
+      // If fetch fails, automatically remove plant from the user's plant list
+
+
+      Fluttertoast.showToast(msg: 'Failed to fetch plant details, plant removed from user list');
     }
   }
+
+  Future<void> _removePlantFromUser(String userId, String plantId) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'plants': FieldValue.arrayRemove([plantId]),
+      });
+      print('Removed plant ID: $plantId from user');
+    } catch (e) {
+      print('Error removing plant from user: $e');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +98,7 @@ class UserPlantsGrid extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  plant.description ?? 'No description',
+                  plant.plantId ?? 'No description',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -103,41 +123,40 @@ class UserPlantsGrid extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        bool? confirmDelete = await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Plant'),
-                            content: const Text('Are you sure you want to delete this plant?'),
-                            actions: [
-                              TextButton(
-                                child: const Text('Cancel'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(false);
-                                },
-                              ),
-                              TextButton(
-                                child: const Text('Delete'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(true);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
+                    onPressed: () async {
+                      bool? confirmDelete = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Delete Plant'),
+                          content: const Text('Are you sure you want to delete this plant?'),
+                          actions: [
+                            TextButton(
+                              child: const Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop(false);
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('Delete'),
+                              onPressed: () {
+                                Navigator.of(context).pop(true);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
 
-                        if (confirmDelete == true) {
-                          if (plant.plantId.isNotEmpty) {
-                            await _fetchAndDeletePlant(context, plant.plantId);
+                      if (confirmDelete == true) {
+                        if (plant.plantId.isNotEmpty) {
+                          await _fetchAndDeletePlant(context, plant.plantId);
 
-                            // Refresh UI after deletion
-                            (context as Element).markNeedsBuild(); // Optionally use setState in StatefulWidget
-                          } else {
-                            Fluttertoast.showToast(msg: 'Invalid plant ID');
-                          }
+                          // Refresh UI after deletion
+                          (context as Element).markNeedsBuild(); // Optionally use setState in StatefulWidget
+                        } else {
+                          Fluttertoast.showToast(msg: 'Invalid plant ID');
                         }
                       }
-
+                    },
                   ),
                 ],
               ),

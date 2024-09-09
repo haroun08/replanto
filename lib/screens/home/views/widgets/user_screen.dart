@@ -33,11 +33,18 @@ class UserProfileScreen extends StatelessWidget {
 
   Future<void> _deletePlant(String userId, String plantId) async {
     try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'plants': FieldValue.arrayUnion([plantId]),
+      });
+
       await userRepo.deletePlantFromUser(userId, plantId);
-      await plantRepo.deletePlant(plantId); // Ensure this method exists in your plant repository
+
+      await plantRepo.deletePlant(plantId);
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
       print('Error deleting plant: $e');
+      await userRepo.deletePlantFromUser(userId, plantId);
+
       Fluttertoast.showToast(msg: 'Failed to delete plant');
     }
   }

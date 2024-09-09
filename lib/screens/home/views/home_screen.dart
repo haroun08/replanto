@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
+import 'package:replanto/screens/home/views/widgets/Calender.dart';
 import 'package:replanto/screens/home/views/widgets/CarouselPanel.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 import 'package:user_repository/user_repository.dart';
@@ -41,7 +42,7 @@ class _HomepageState extends State<Homepage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserProfileScreen(userId: _userId!,),
+          builder: (context) => UserProfileScreen(userId: _userId!),
         ),
       );
     } else {
@@ -114,6 +115,12 @@ class _HomepageState extends State<Homepage> {
           );
         }
         break;
+      case 3: // Calendar case
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CalendarReplanto()), // Navigate to calendar page
+        );
+        break;
     }
   }
 
@@ -180,6 +187,11 @@ class _HomepageState extends State<Homepage> {
             title: const Text('Add Plant'),
             activeColor: Colors.green,
           ),
+          BottomNavyBarItem(
+            icon: const Icon(Icons.calendar_today),
+            title: const Text('Calendar'),
+            activeColor: Colors.green,
+          ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -216,3 +228,4 @@ class _HomepageState extends State<Homepage> {
     );
   }
 }
+
