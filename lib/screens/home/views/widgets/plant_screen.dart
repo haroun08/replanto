@@ -34,14 +34,10 @@ class _UserPlantsGridState extends State<UserPlantsGrid> {
 
   Future<void> _fetchAndDeletePlant(BuildContext context, String plantId) async {
     try {
-      // Fetch plant details before deletion
       final plant = await widget.plantRepo.getPlantById(plantId);
-      print('Fetched plant ID: $plantId'); // Log the plant ID to the console
+      print('Fetched plant ID: $plantId');
 
-      // Remove plant from user and handle plant deletion
       await widget.userRepo.deletePlantFromUser(widget.userId, plantId);
-
-      // Delete the plant from the Firestore collection
       await widget.onDeletePlant(widget.userId, plantId);
 
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
@@ -50,6 +46,7 @@ class _UserPlantsGridState extends State<UserPlantsGrid> {
       Fluttertoast.showToast(msg: 'Error deleting plant: $e');
     }
   }
+
 
 
   Future<void> _removePlantFromUser(String userId, String plantId) async {

@@ -1,18 +1,15 @@
 import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_repository/plant_repository.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:user_repository/src/entites/entities.dart';
-import 'package:user_repository/src/models/user.dart';
-import 'package:user_repository/src/user_repo.dart';
+
+import '../user_repository.dart';
 
 class FirebaseUserRepo implements UserRepository {
   final FirebaseAuth _firebaseAuth;
   final CollectionReference usersCollection = FirebaseFirestore.instance.collection('users');
   final FirebasePlantRepo _plantRepo;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   FirebaseUserRepo({
     FirebaseAuth? firebaseAuth,
@@ -43,7 +40,7 @@ class FirebaseUserRepo implements UserRepository {
   @override
   Future<void> updateProfileData(String userId, Map<String, dynamic> updatedData) async {
     try {
-      await usersCollection.doc(userId).update(updatedData as Map<String, dynamic>);
+      await usersCollection.doc(userId).update(updatedData);
     } catch (e) {
       throw Exception('Failed to update profile: $e');
     }
@@ -63,8 +60,8 @@ class FirebaseUserRepo implements UserRepository {
   Future<MyUser> signUp(MyUser myUser, String password) async {
     try {
       UserCredential user = await _firebaseAuth.createUserWithEmailAndPassword(
-          email: myUser.email,
-          password: password
+        email: myUser.email,
+        password: password,
       );
 
       myUser.userId = user.user!.uid;
@@ -83,9 +80,7 @@ class FirebaseUserRepo implements UserRepository {
   @override
   Future<void> setUserData(MyUser myUser) async {
     try {
-      await usersCollection
-          .doc(myUser.userId)
-          .set(myUser.toEntity().toDocument());
+      await usersCollection.doc(myUser.userId).set(myUser.toEntity().toDocument());
     } catch (e) {
       log(e.toString());
       rethrow;
@@ -108,42 +103,13 @@ class FirebaseUserRepo implements UserRepository {
 
   @override
   Future<void> deletePlantFromUser(String userId, String plantId) async {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
     try {
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final userSnapshot = await transaction.get(userRef);
-
-        if (!userSnapshot.exists) {
-          throw Exception("User not found");
-        }
-
-        final userData = userSnapshot.data();
-        List<dynamic> plantList = userData?['plants'] ?? [];
-
-        // Remove the plant by either string or map
-        plantList.removeWhere((plant) {
-          if (plant is String) {
-            return plant == plantId;
-          } else if (plant is Map<String, dynamic>) {
-            return plant['plantId'] == plantId;
-          }
-          return false;
-        });
-
-        transaction.update(userRef, {'plants': plantList});
-        print('Removed plant ID: $plantId from user');
-      });
+      await _plantRepo.deletePlant(plantId); // Delegate deletion to FirebasePlantRepo
     } catch (e) {
-      print("Error deleting plant from user: $e");
+      log('Error deleting plant from user: $e');
       throw Exception('Failed to delete plant from user');
     }
   }
-
-
-
-
-
 
   @override
   Future<void> deleteUserAndPlants(String userId) async {
