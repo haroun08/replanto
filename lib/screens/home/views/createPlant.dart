@@ -207,7 +207,6 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       }
 
       try {
-        // Add plant to Firestore and get the document ID (plantId)
         final plantData = {
           'name': _nameController.text,
           'picture': imageUrl,
@@ -225,16 +224,14 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
         final plantId = docRef.id;
         log('Plant document added with ID: $plantId');
 
-        // Include plantId in the plant data
         final userPlantData = {
           'plantId': plantId,
-          ...plantData,  // Include all the original plant fields
+          ...plantData,
         };
 
-        // Update the user's document to add the full plant object with plantId
         final userId = widget.userId;
         await FirebaseFirestore.instance.collection('users').doc(userId).update({
-          'plants': FieldValue.arrayUnion([userPlantData]), // Add plantId with details
+          'plants': FieldValue.arrayUnion([userPlantData]),
         });
         log('Updated user document for userId: $userId with new plantId: $plantId');
 

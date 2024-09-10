@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,39 +34,25 @@ class UserProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _deletePlant(String userId, String plantId) async {
+  Future<void> _deletePlant(String plantId, String userId) async {
     try {
-      await plantRepo.deletePlant(plantId);
+      // Delete the plant document from the plants collection
+      await FirebaseFirestore.instance.collection('plants').doc(plantId).delete();
+      log('Plant document with ID: $plantId deleted.');
 
-      // Update user documents to remove plant reference
-      final usersCollection = FirebaseFirestore.instance.collection('users');
-      final userDocs = await usersCollection.where('plants', arrayContains: plantId).get();
+      // Remove the plant reference from the user's document
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'plants': FieldValue.arrayRemove([{'plantId': plantId}])
+      });
+      log('Plant ID: $plantId removed from user document for userId: $userId');
 
-      for (var doc in userDocs.docs) {
-        await doc.reference.update({
-          'plants': FieldValue.arrayRemove([plantId]),
-        });
-      }
 
-      print('Plant deleted successfully from both collection and user list');
     } catch (e) {
-      print('Error deleting plant: $e');
+      log('Error deleting plant: $e');
 
-      // If deletion fails or plant is not found, clean up references in user documents
-      if (e.toString().contains('Plant not found')) {
-        final usersCollection = FirebaseFirestore.instance.collection('users');
-        final userDocs = await usersCollection.where('plants', arrayContains: plantId).get();
-
-        for (var doc in userDocs.docs) {
-          await doc.reference.update({
-            'plants': FieldValue.arrayRemove([plantId]),
-          });
-        }
-
-        print('Removed plant reference from user documents');
-      }
     }
   }
+
 
   Future<void> _logout(BuildContext context) async {
     try {
@@ -185,6 +173,7 @@ class UserProfileScreen extends StatelessWidget {
                     plants: user.plants,
                     userId: user.userId,
                     plantRepo: plantRepo,
+                    userRepo: userRepo,
                     onDeletePlant: (userId, plantId) async {
                       await _deletePlant(userId, plantId);
                     },

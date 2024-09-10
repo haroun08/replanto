@@ -10,6 +10,8 @@ class UserPlantsGrid extends StatefulWidget {
   final List<Plant> plants;
   final String userId;
   final FirebasePlantRepo plantRepo;
+  final FirebaseUserRepo userRepo; // Add userRepo here
+
   final Function(String userId, String plantId) onDeletePlant;
   final Function(Plant plant) onPlantSelected; // Callback for plant selection
 
@@ -20,6 +22,7 @@ class UserPlantsGrid extends StatefulWidget {
     required this.plantRepo,
     required this.onDeletePlant,
     required this.onPlantSelected,
+    required this.userRepo,
   });
 
   @override
@@ -27,22 +30,27 @@ class UserPlantsGrid extends StatefulWidget {
 }
 
 class _UserPlantsGridState extends State<UserPlantsGrid> {
+
+
   Future<void> _fetchAndDeletePlant(BuildContext context, String plantId) async {
     try {
       // Fetch plant details before deletion
       final plant = await widget.plantRepo.getPlantById(plantId);
       print('Fetched plant ID: $plantId'); // Log the plant ID to the console
-      _removePlantFromUser(widget.userId, plantId);
 
-      // Proceed to delete the plant
+      // Remove plant from user and handle plant deletion
+      await widget.userRepo.deletePlantFromUser(widget.userId, plantId);
+
+      // Delete the plant from the Firestore collection
       await widget.onDeletePlant(widget.userId, plantId);
+
       Fluttertoast.showToast(msg: 'Plant deleted successfully');
     } catch (e) {
-      print('Error fetching plant details: $e');
-      // If fetch fails, remove plant from user list
-      Fluttertoast.showToast(msg: 'Failed to fetch plant details, plant removed from user list');
+      print('Error deleting plant: $e');
+      Fluttertoast.showToast(msg: 'Error deleting plant: $e');
     }
   }
+
 
   Future<void> _removePlantFromUser(String userId, String plantId) async {
     try {

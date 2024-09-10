@@ -93,14 +93,31 @@ class FirebasePlantRepo implements PlantRepo {
 
   Future<void> _deletePlantFromUser(String userId, String plantId) async {
     try {
+      // Retrieve the user document
+      DocumentSnapshot userDoc = await usersCollection.doc(userId).get();
+
+      // Cast the document data to Map<String, dynamic>
+      Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+      // Check if 'plants' field exists and is a list
+      List<dynamic> plants = userData?['plants'] ?? [];
+
+      // Find the plant map in the array that matches the plantId
+      plants.removeWhere((plant) => plant is Map<String, dynamic> && plant['plantId'] == plantId);
+
+      // Update the user's document with the modified array
       await usersCollection.doc(userId).update({
-        'plants': FieldValue.arrayRemove([plantId]),
+        'plants': plants,
       });
+
+      log('Successfully removed plant with ID: $plantId from user');
     } catch (e) {
       log('Failed to remove plant from user: $e');
       rethrow;
     }
   }
+
+
 
   @override
   Future<Plant> getPlantById(String plantId) async {

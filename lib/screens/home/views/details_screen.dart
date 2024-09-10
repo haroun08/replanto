@@ -157,7 +157,7 @@ class DetailsScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 20,
+            bottom: 80,
             right: 20,
             child: FloatingActionButton(
               onPressed: () {

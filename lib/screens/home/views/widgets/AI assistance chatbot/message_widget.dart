@@ -15,7 +15,7 @@ class MessageWidget extends StatelessWidget {
         if (!isFromUser) ...[
           const CircleAvatar(
             radius: 20,
-            backgroundImage: AssetImage('assets/replanto.png'),
+            backgroundImage: AssetImage('assets/replanto-bot.png'),
           ),
           const SizedBox(width: 10),
         ],

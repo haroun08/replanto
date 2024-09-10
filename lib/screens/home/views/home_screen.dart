@@ -134,6 +134,7 @@ class _HomepageState extends State<Homepage> {
             scale: 14,
           ),
         ),
+
         actions: [
           IconButton(
             icon: Icon(Icons.notifications, color: Theme.of(context).colorScheme.primary),
@@ -142,13 +143,21 @@ class _HomepageState extends State<Homepage> {
             },
           ),
           _myUser.picture.isNotEmpty
-              ? CircleAvatar(
-            radius: 15,
-            backgroundImage: NetworkImage(_myUser.picture, scale: 2),
+              ? GestureDetector(
+            onTap: _onProfileButtonPressed,
+            child: CircleAvatar(
+              radius: 15,
+              backgroundImage: NetworkImage(_myUser.picture, scale: 2),
+            ),
           )
-              : IconButton(
-            icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
-            onPressed: _onProfileButtonPressed,
+              : GestureDetector(
+            onTap: _onProfileButtonPressed,
+            child: IconButton(
+              icon: const Icon(CupertinoIcons.person_alt_circle, color: Colors.green),
+              onPressed: () {
+                // This action is handled by GestureDetector
+              },
+            ),
           ),
         ],
         bottom: PreferredSize(

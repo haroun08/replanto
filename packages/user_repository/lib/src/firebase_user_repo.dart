@@ -119,18 +119,28 @@ class FirebaseUserRepo implements UserRepository {
         }
 
         final userData = userSnapshot.data();
-        List<String> plantIds = List<String>.from(userData?['plants'] ?? []);
+        List<dynamic> plantList = userData?['plants'] ?? [];
 
-        if (plantIds.contains(plantId)) {
-          plantIds.remove(plantId);
-          transaction.update(userRef, {'plants': plantIds});
-        }
+        // Remove the plant by either string or map
+        plantList.removeWhere((plant) {
+          if (plant is String) {
+            return plant == plantId;
+          } else if (plant is Map<String, dynamic>) {
+            return plant['plantId'] == plantId;
+          }
+          return false;
+        });
+
+        transaction.update(userRef, {'plants': plantList});
+        print('Removed plant ID: $plantId from user');
       });
     } catch (e) {
       print("Error deleting plant from user: $e");
-      throw Exception("Failed to delete plant from user");
+      throw Exception('Failed to delete plant from user');
     }
   }
+
+
 
 
 
