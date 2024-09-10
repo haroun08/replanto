@@ -116,7 +116,9 @@ class _HomepageState extends State<Homepage> {
       case 3:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CalendarReplanto()),
+          MaterialPageRoute(builder: (context) => const CalendarReplanto(
+
+          )),
         );
         break;
     }
@@ -134,7 +136,6 @@ class _HomepageState extends State<Homepage> {
             scale: 14,
           ),
         ),
-
         actions: [
           IconButton(
             icon: Icon(Icons.notifications, color: Theme.of(context).colorScheme.primary),
@@ -233,15 +234,10 @@ class _HomepageState extends State<Homepage> {
             return const Center(child: Text('No users found.'));
           }
 
-          return GridView.builder(
+          return ListView.separated(
             padding: const EdgeInsets.all(16.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16.0,
-              mainAxisSpacing: 16.0,
-              childAspectRatio: 3 / 2,
-            ),
             itemCount: filteredUsers.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16.0),
             itemBuilder: (context, index) {
               final userData = filteredUsers[index].data() as Map<String, dynamic>;
               final userId = filteredUsers[index].id;
@@ -260,23 +256,38 @@ class _HomepageState extends State<Homepage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(userData['picture'] ?? ''),
-                        radius: 30,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        userData['name'] ?? 'No name',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        userData['age'] != null ? 'Age: ${userData['age']}' : 'No age provided',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(userData['picture'] ?? 'https://example.com/default-picture.jpg'),
+                          radius: 30,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userData['name'] ?? 'No name',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              if (userData['age'] != null)
+                                Text(
+                                  'Age: ${userData['age']}',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              if (userData['age'] == null)
+                                Text(
+                                  'No age provided',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

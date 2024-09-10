@@ -9,13 +9,13 @@ import 'package:plant_repository/plant_repository.dart';
 class EditPlantPage extends StatefulWidget {
   final Plant plant;
   final FirebasePlantRepo plantRepo;
-  final String userId; // Add userId
+  final String userId;
 
   const EditPlantPage({
     super.key,
     required this.plant,
-    required this.plantRepo,  // Make plantRepo required
-    required this.userId, // Add userId
+    required this.plantRepo,
+    required this.userId,
   });
 
   @override
@@ -120,6 +120,7 @@ class _EditPlantPageState extends State<EditPlantPage> {
         const SnackBar(content: Text('Plant updated successfully!')),
       );
     } catch (e) {
+      log('Error updating plant: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update plant: $e')),
       );

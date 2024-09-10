@@ -65,6 +65,11 @@ class DetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser?.uid;
+    print('Current User ID: $userId');  // Debug print
+    print('Plant User ID: ${plant.userId}');  // Debug print
+
+    final canEditOrDelete = userId != null && plant.userId == userId;
+    print('Can Edit or Delete: $canEditOrDelete');  // Debug print
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -73,7 +78,7 @@ class DetailsScreen extends StatelessWidget {
         title: Text(plant.name, style: const TextStyle(color: Colors.black)),
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
-          if (plant.userId == userId) ...[
+          if (canEditOrDelete) ...[
             IconButton(
               icon: const Icon(Icons.edit, color: Colors.blue),
               onPressed: () {
@@ -177,6 +182,7 @@ class DetailsScreen extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildPlantAttributes(BuildContext context, Plant plant) {
     return Column(

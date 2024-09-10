@@ -10,25 +10,25 @@ class UserInfoSection extends StatelessWidget {
   Future<Map<String, String>> _fetchUserData(String userId) async {
     try {
       if (userId.isEmpty) {
-        return {'name': 'Unknown User', 'picture': ''};
+        return {'name': 'Unknown User', 'picture': 'https://example.com/default-picture.jpg'};
       }
       final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (doc.exists) {
         final data = doc.data();
-        if (data != null && data.containsKey('name') && data.containsKey('picture')) {
+        if (data != null) {
           return {
-            'name': data['name'] ?? 'Unknown',
-            'picture': data['picture'] ?? '',
+            'name': data['name'] ?? 'Unknown User',
+            'picture': data['picture'] ?? 'https://example.com/default-picture.jpg',
           };
         } else {
-          throw Exception('User name or picture field is missing');
+          return {'name': 'Unknown User', 'picture': 'https://example.com/default-picture.jpg'};
         }
       } else {
-        throw Exception('User not found');
+        return {'name': 'User not found', 'picture': 'https://example.com/default-picture.jpg'};
       }
     } catch (e) {
       print('Error fetching user data: $e');
-      return {'name': 'Error', 'picture': ''};
+      return {'name': 'Error', 'picture': 'https://example.com/default-picture.jpg'};
     }
   }
 
@@ -42,14 +42,21 @@ class UserInfoSection extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Text('Error fetching user details: ${snapshot.error}');
         } else if (snapshot.hasData) {
-          final userName = snapshot.data!['name']!;
-          final userPicture = snapshot.data!['picture']!;
+          final userData = snapshot.data!;
+          final userName = userData['name']!;
+          final userPicture = userData['picture']!;
           return Row(
             children: [
               if (userPicture.isNotEmpty)
                 CircleAvatar(
                   backgroundImage: NetworkImage(userPicture),
                   radius: 20,
+                )
+              else
+                const CircleAvatar(
+                  backgroundColor: Colors.grey,
+                  radius: 20,
+                  child: Icon(Icons.person, color: Colors.white),
                 ),
               const SizedBox(width: 10),
               Expanded(
@@ -81,4 +88,6 @@ class UserInfoSection extends StatelessWidget {
       },
     );
   }
+
+
 }

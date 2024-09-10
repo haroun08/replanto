@@ -174,6 +174,7 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                 final userId = comment['userId'];
                 final commentId = comment.id;
                 final currentUser = FirebaseAuth.instance.currentUser;
+
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
                   child: Padding(
@@ -214,6 +215,46 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                                       children: [
                                         Text(comment['comment']),
                                         const SizedBox(height: 5),
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('plants')
+                                              .doc(widget.plantId)
+                                              .collection('comments')
+                                              .doc(commentId)
+                                              .collection('replies')
+                                              .orderBy('timestamp')
+                                              .snapshots(),
+                                          builder: (context, replySnapshot) {
+                                            if (replySnapshot.hasData &&
+                                                replySnapshot.data!.docs.isNotEmpty) {
+                                              final replies = replySnapshot.data!.docs;
+                                              return ListView.builder(
+                                                shrinkWrap: true,
+                                                physics:
+                                                const NeverScrollableScrollPhysics(),
+                                                itemCount: replies.length,
+                                                itemBuilder: (context, replyIndex) {
+                                                  final reply = replies[replyIndex];
+                                                  return ListTile(
+                                                    leading: const Icon(Icons.reply),
+                                                    title: Text(reply['comment']),
+                                                    trailing: Text(
+                                                      DateFormat('HH:mm').format(
+                                                          (reply['timestamp']
+                                                          as Timestamp)
+                                                              .toDate()),
+                                                      style: const TextStyle(
+                                                          fontSize: 12),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            } else {
+                                              return const SizedBox.shrink();
+                                            }
+                                          },
+                                        ),
+                                        const SizedBox(height: 5),
                                         if (_replyingToCommentId == commentId)
                                           Padding(
                                             padding: const EdgeInsets.only(left: 40.0),
@@ -225,7 +266,8 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                                                     hintText: 'Write a reply...',
                                                     suffixIcon: IconButton(
                                                       icon: const Icon(Icons.send),
-                                                      onPressed: () => _postReply(commentId),
+                                                      onPressed: () =>
+                                                          _postReply(commentId),
                                                     ),
                                                   ),
                                                 ),
@@ -233,53 +275,43 @@ class _FeedbackSectionState extends State<FeedbackSection> {
                                               ],
                                             ),
                                           ),
-                                        GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _replyingToCommentId = commentId;
-                                            });
-                                          },
-                                          child: const Text(
-                                            'Reply',
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        if (userId == currentUser?.uid) // Check if the comment belongs to the current user
-                                          Row(
-                                            children: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _editingCommentId = commentId;
-                                                    _commentController.text = comment['comment'];
-                                                  });
-                                                },
-                                                child: const Text('Edit'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () => _deleteComment(commentId),
-                                                child: const Text('Delete'),
-                                              ),
-                                            ],
+                                        if (_replyingToCommentId == null)
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _replyingToCommentId = commentId;
+                                              });
+                                            },
+                                            child: const Text('Reply'),
                                           ),
                                       ],
                                     ),
-                                    trailing: Text(
-                                      DateFormat('HH:mm').format((comment['timestamp'] as Timestamp).toDate()),
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
                                   );
                                 } else {
-                                  return const Icon(Icons.error);
+                                  return const Text('No user picture');
                                 }
                               },
                             );
                           },
                         ),
+                        if (userId == currentUser?.uid)
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  setState(() {
+                                    _commentController.text = comment['comment'];
+                                    _editingCommentId = commentId;
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _deleteComment(commentId),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),

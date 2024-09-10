@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:plant_repository/plant_repository.dart';
 import 'package:user_repository/user_repository.dart';
 import '../details_screen.dart';
@@ -10,10 +11,10 @@ class UserPlantsGrid extends StatefulWidget {
   final List<Plant> plants;
   final String userId;
   final FirebasePlantRepo plantRepo;
-  final FirebaseUserRepo userRepo; // Add userRepo here
+  final FirebaseUserRepo userRepo;
 
   final Function(String userId, String plantId) onDeletePlant;
-  final Function(Plant plant) onPlantSelected; // Callback for plant selection
+  final Function(Plant plant) onPlantSelected;
 
   const UserPlantsGrid({
     super.key,
@@ -30,7 +31,14 @@ class UserPlantsGrid extends StatefulWidget {
 }
 
 class _UserPlantsGridState extends State<UserPlantsGrid> {
+  String? currentUserId;
 
+  @override
+  void initState() {
+    super.initState();
+    // Get the current logged-in user's ID
+    currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  }
 
   Future<void> _fetchAndDeletePlant(BuildContext context, String plantId) async {
     try {
@@ -46,8 +54,6 @@ class _UserPlantsGridState extends State<UserPlantsGrid> {
       Fluttertoast.showToast(msg: 'Error deleting plant: $e');
     }
   }
-
-
 
   Future<void> _removePlantFromUser(String userId, String plantId) async {
     try {
@@ -129,69 +135,64 @@ class _UserPlantsGridState extends State<UserPlantsGrid> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    plant.plantId ?? 'No description',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditPlantPage(
-                              plant: plant,
-                              plantRepo: widget.plantRepo,
-                              userId: widget.userId,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        bool? confirmDelete = await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Plant'),
-                            content: const Text('Are you sure you want to delete this plant?'),
-                            actions: [
-                              TextButton(
-                                child: const Text('Cancel'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(false);
-                                },
-                              ),
-                              TextButton(
-                                child: const Text('Delete'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(true);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
 
-                        if (confirmDelete == true) {
-                          if (plant.plantId.isNotEmpty) {
-                            await _fetchAndDeletePlant(context, plant.plantId);
-                            setState(() {}); // Refresh UI after deletion
-                          } else {
-                            Fluttertoast.showToast(msg: 'Invalid plant ID');
+                // Only show edit and delete buttons if the logged-in user is the owner of the profile
+                if (currentUserId == widget.userId)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditPlantPage(
+                                plant: plant,
+                                plantRepo: widget.plantRepo,
+                                userId: widget.userId,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          bool? confirmDelete = await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Plant'),
+                              content: const Text('Are you sure you want to delete this plant?'),
+                              actions: [
+                                TextButton(
+                                  child: const Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                ),
+                                TextButton(
+                                  child: const Text('Delete'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmDelete == true) {
+                            if (plant.plantId.isNotEmpty) {
+                              await _fetchAndDeletePlant(context, plant.plantId);
+                              setState(() {}); // Refresh UI after deletion
+                            } else {
+                              Fluttertoast.showToast(msg: 'Invalid plant ID');
+                            }
                           }
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                        },
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
