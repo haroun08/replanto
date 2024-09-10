@@ -1,90 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_neat_and_clean_calendar/flutter_neat_and_clean_calendar.dart';
 
-class CalendarReplanto extends StatelessWidget {
-  const CalendarReplanto({super.key});
+class CalendarReplanto extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _CalendarReplantoState();
+  }
+}
+
+class _CalendarReplantoState extends State<CalendarReplanto> {
+  bool showEvents = true;
+
+  // Define your list of events
+  List<NeatCleanCalendarEvent> _events = [
+    NeatCleanCalendarEvent(
+      'Watering the plant',
+      startTime: DateTime.now(),
+      endTime: DateTime.now().add(Duration(hours: 1)),
+      description: 'Water the indoor plants',
+      color: Colors.green,
+    ),
+    NeatCleanCalendarEvent(
+      'Fertilizing',
+      startTime: DateTime.now().add(Duration(days: 1, hours: 2)),
+      endTime: DateTime.now().add(Duration(days: 1, hours: 3)),
+      description: 'Add fertilizers to outdoor plants',
+      color: Colors.blue,
+    ),
+    // Add more events if necessary
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Automatically handle today's events when the calendar loads
+    _handleNewDate(DateTime.now());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plant Watering Calendar'),
-        backgroundColor: Colors.green.shade700, // Darker shade for better contrast
-        elevation: 5, // Add some elevation for a shadow effect
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white),
-            onPressed: () {
-              // Show information or help dialog
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Calendar Information'),
-                  content: const Text('This calendar helps you manage plant watering schedules.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+        title: Text('Calendar Replanto'),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              const SizedBox(height: 16.0),
-              Expanded(
-                child: Calendar(
-                  startOnMonday: true,
-                  weekDays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-                  isExpandable: true,
-                  eventDoneColor: Colors.green.shade600,
-                  selectedColor: Colors.pink.shade300,
-                  selectedTodayColor: Colors.red.shade300,
-                  todayColor: Colors.blue.shade300,
-                  eventColor: Colors.orange.shade300,
-                  locale: 'de_DE',
-                  todayButtonText: 'Heute',
-                  allDayEventText: 'Ganztägig',
-                  multiDayEndText: 'Ende',
-                  isExpanded: true,
-                  expandableDateFormat: 'EEEE, dd. MMMM yyyy',
-                  datePickerType: DatePickerType.date,
-                  dayOfWeekStyle: const TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-              ),
-            ],
+        child: Calendar(
+          startOnMonday: true,
+          weekDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          eventsList: _events, // You are passing the event list here
+          isExpandable: true,
+          eventDoneColor: Colors.grey,
+          selectedColor: Colors.orange,
+          selectedTodayColor: Colors.teal,
+          todayColor: Colors.red,
+          defaultDayColor: Colors.black,
+          datePickerDarkTheme: ThemeData.dark().copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: Colors.blue,
+              onPrimary: Colors.yellow,
+              surface: Colors.grey,
+              onSurface: Colors.white,
+            ),
           ),
+          datePickerLightTheme: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.green,
+              onPrimary: Colors.white,
+             // surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          locale: 'en_US', // Adjust locale as necessary
+          todayButtonText: 'Today',
+          allDayEventText: 'All-day',
+          isExpanded: true,
+          onEventSelected: (event) {
+            print('Event selected: ${event.summary}');
+          },
+          onDateSelected: (date) {
+            print('Date selected: $date');
+          },
+          dayOfWeekStyle: TextStyle(
+            color: Colors.purple,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+          ),
+          showEventListViewIcon: true,
+          showEvents: showEvents,
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add your event creation logic here
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add new event feature coming soon!')),
-          );
+          setState(() {
+            showEvents = !showEvents;
+          });
         },
-        backgroundColor: Colors.green.shade700,
-        tooltip: 'Add Event',
-        child: const Icon(Icons.add, size: 30),
+        child: Icon(showEvents ? Icons.visibility_off : Icons.visibility),
       ),
     );
+  }
+
+  void _handleNewDate(DateTime date) {
+    print('New date selected: $date');
   }
 }
