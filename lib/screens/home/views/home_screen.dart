@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/Calender.dart';
+import 'package:replanto/screens/home/views/widgets/Shop_Page.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 import 'package:user_repository/user_repository.dart';
 import 'package:plant_repository/plant_repository.dart';
@@ -102,7 +103,7 @@ class _HomepageState extends State<Homepage> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ChatPage()),
+          MaterialPageRoute(builder: (context) =>  ShopPage()),
         );
         break;
       case 2:
@@ -191,8 +192,8 @@ class _HomepageState extends State<Homepage> {
             activeColor: Theme.of(context).colorScheme.primary,
           ),
           BottomNavyBarItem(
-            icon: const Icon(CupertinoIcons.news_solid, color: Colors.green),
-            title: const Text('Community', style: TextStyle(color: Colors.green)),
+            icon: const Icon(CupertinoIcons.shopping_cart, color: Colors.green),
+            title: const Text('Shop', style: TextStyle(color: Colors.green)),
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(

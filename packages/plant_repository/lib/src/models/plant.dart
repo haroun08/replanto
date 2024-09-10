@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../entities/plant_entity.dart';
 
 class Plant {
@@ -102,6 +104,21 @@ class Plant {
       userId: map['userId'] as String,
     );
   }
-
+  factory Plant.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return Plant(
+      plantId: data['plantId'] as String,
+      picture: data['picture'] as String,
+      name: data['name'] as String,
+      description: data['description'] as String,
+      humidity: data['humidity'] as int,
+      pHLevel: data['pHLevel'] as int,
+      sunExposure: data['sunExposure'] as int,
+      temperature: data['temperature'] as int,
+      soilMoisture: data['soilMoisture'] as int,
+      healthy: data['healthy'] as int,
+      userId: data['userId'] as String,
+    );
+  }
 
 }
