@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:replanto/screens/home/views/widgets/AI%20assistance%20chatbot/chat_page.dart';
 import 'package:replanto/screens/home/views/widgets/Calender.dart';
+import 'package:replanto/screens/home/views/widgets/RealTime%20Fetching/RealTimePage.dart';
 import 'package:replanto/screens/home/views/widgets/Shop_Page.dart';
 import 'package:replanto/screens/home/views/widgets/user_screen.dart';
 import 'package:user_repository/user_repository.dart';
@@ -107,6 +108,13 @@ class _HomepageState extends State<Homepage> {
         );
         break;
       case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CalendarReplanto()
+          ),
+        );
+        break;
+      case 3:
         if (_userId != null) {
           Navigator.push(
             context,
@@ -114,14 +122,7 @@ class _HomepageState extends State<Homepage> {
           );
         }
         break;
-      case 3:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CalendarReplanto(
 
-          )),
-        );
-        break;
     }
   }
 
@@ -139,10 +140,14 @@ class _HomepageState extends State<Homepage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Theme.of(context).colorScheme.primary),
+            icon: Icon(CupertinoIcons.time_solid, color: Theme.of(context).colorScheme.primary),
             onPressed: () {
-              // Notification button action
-            },
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RealTimePage(
+
+                )),
+              );            },
           ),
           _myUser.picture.isNotEmpty
               ? GestureDetector(
@@ -197,15 +202,16 @@ class _HomepageState extends State<Homepage> {
             activeColor: Colors.green,
           ),
           BottomNavyBarItem(
-            icon: const Icon(CupertinoIcons.add_circled_solid, size: 30, color: Colors.green),
-            title: const Text('Add Plant', style: TextStyle(color: Colors.green)),
-            activeColor: Colors.green,
-          ),
-          BottomNavyBarItem(
             icon: const Icon(Icons.calendar_today, color: Colors.green),
             title: const Text('Calendar', style: TextStyle(color: Colors.green)),
             activeColor: Colors.green,
           ),
+          BottomNavyBarItem(
+            icon: const Icon(CupertinoIcons.add_circled_solid, size: 30, color: Colors.green),
+            title: const Text('Add Plant', style: TextStyle(color: Colors.green)),
+            activeColor: Colors.green,
+          ),
+
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(

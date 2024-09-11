@@ -45,6 +45,7 @@ dependencies:
   dash_chat_2: ^0.0.21
   google_generative_ai: ^0.4.6
   file_picker: ^8.0.7
+  firebase_database: ^11.1.2
 
   user_repository:
     path: packages/user_repository

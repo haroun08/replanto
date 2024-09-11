@@ -204,7 +204,13 @@ class _CalendarReplantoState extends State<CalendarReplanto> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendar Replanto'),
+        title: const Text('Replanto Calender',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SafeArea(

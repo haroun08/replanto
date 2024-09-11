@@ -38,13 +38,15 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('replanto AI bot'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.file_open),
-            onPressed: _pickFile, // Button to read files
+        title: const Text(
+          'replanto AI bot',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
-        ],
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.green[600],
       ),
       body: Stack(
         children: [
@@ -68,20 +70,31 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        autofocus: true,
-                        focusNode: _textFieldFocus,
-                        decoration: textFieldDecoration(),
-                        controller: _textController,
-                        onSubmitted: _sendChatMessage,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              offset: const Offset(0, 4),
+                              blurRadius: 8,
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextField(
+                          focusNode: _textFieldFocus,
+                          controller: _textController,
+                          onSubmitted: _sendChatMessage,
+                          decoration: _inputDecoration(),
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.send),
+                      icon: const Icon(Icons.send, color: Colors.green),
                       onPressed: () => _sendChatMessage(_textController.text),
                     ),
                   ],
@@ -90,10 +103,30 @@ class _ChatPageState extends State<ChatPage> {
             ],
           ),
           if (_loading)
-            const Center(
-              child: CircularProgressIndicator(),
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
             ),
         ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration() {
+    return InputDecoration(
+      hintText: 'Enter a prompt...',
+      contentPadding: const EdgeInsets.all(18),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25),
+        borderSide: const BorderSide(color: Colors.green, width: 2),
       ),
     );
   }
@@ -129,9 +162,6 @@ class _ChatPageState extends State<ChatPage> {
       });
     } finally {
       _textController.clear();
-      setState(() {
-        _loading = false;
-      });
       _textFieldFocus.requestFocus();
     }
   }
@@ -142,7 +172,7 @@ class _ChatPageState extends State<ChatPage> {
     if (result != null) {
       File file = File(result.files.single.path!);
       String fileContent = await file.readAsString();
-      _sendChatMessage(fileContent); // Send file content as message
+      _sendChatMessage(fileContent);
     }
   }
 
@@ -160,21 +190,6 @@ class _ChatPageState extends State<ChatPage> {
       final history = await file.readAsString();
       log("Chat history loaded: $history");
     }
-  }
-
-  InputDecoration textFieldDecoration() {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.all(15),
-      hintText: 'Enter a prompt...',
-      border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
-      ),
-    );
   }
 
   void _showError(String message) {
@@ -205,18 +220,5 @@ class _ChatPageState extends State<ChatPage> {
         curve: Curves.easeOutCirc,
       ),
     );
-  }
-
-  Future<String> getPlantAdvice(String plantId) async {
-    try{
-      final doc = await FirebaseFirestore.instance.collection('plants').doc(plantId).get();
-      if(doc.exists){
-        final plantData = doc.data();
-        return plantData != null ? plantData['advice'] ?? 'No advice available' : 'No data found';
-      }
-      return 'plant not found';
-    }catch(e){
-      return 'Error fetching plant advice: $e';
-    }
   }
 }
